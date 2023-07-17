@@ -1,6 +1,10 @@
-# --- read in data ---- #
+##### --- set up --- #####
 
+rm(list = ls())
 dir <- getwd()
+source("compute_accuracy.R")
+
+##### --- read in data ---- #####
 
 # data from the project stems from multuiple sources
 
@@ -13,10 +17,7 @@ consent <- read.csv(file = file_consent)
 consent <- consent[grepl("2023", consent$StartDate),]
 # remove irrelavant columns
 consent <- consent[, c("name", "pseudonym", "consent", "booking_confirm", "StartDate", "EndDate")]
-
-# write file
-write.csv(consent, "master_spreadsheet.csv", row.names = F)
-
+consent$pseudonym <- toupper(consent$pseudonym) # standardise
 
 # 2. BOOKING: microsoft bookings is used to book a slot
 
@@ -26,13 +27,52 @@ bookings <- read.delim(file = file_bookings)
 # get pseudonym
 bookings$pseudonym <- gsub("{  Please enter your personal pseudonym: ", "", bookings$Custom.Fields, fixed = T)
 bookings$pseudonym <- gsub("}", "", bookings$pseudonym, fixed = T)
+bookings$pseudonym <- toupper(bookings$pseudonym) # standardise
+
 
 # reduce to relevant columns
 bookings <- bookings[, c("pseudonym", "Customer.Name", "Customer.Email", "Customer.Phone", "Date.Time" )]
+names(bookings) <- c("pseudonym", "ppt_name", "ppt_email", "ppt_phone", "dt_booking")
+
+# make booking a dt object
+bookings$dt_booking <- as.POSIXct(bookings$dt_booking, format = "%d/%m/%Y %H:%M")
 
 
 # 3. PSYTOOLKIT: psytoolkit was used to measure individual differences
+
 df <- read.csv(file = file.path(dir, "psytoolkit", "data.csv"))
+df <- subset(df, pseudonym_1 != "") # remove all files that do not contain a pseudonym
+df <- subset(df, pseudonym_1 != "o5s9") # test run stef
+
+# --- demographic data ---
+df$pseudonym <- toupper(df$pseudonym_1) # standardise
+df$complete <- ifelse(is.na(df$TIME_total), FALSE, TRUE)
+df$age <- df$age
+df$gender <- ifelse(df$gender_1 == 1, "male", 
+                    ifelse(df$gender_1 == 2, "female",
+                           ifelse(df$gender_1 == 3, "different", NA)))
+df$ethnicity <- ifelse(df$ethnicity_1 == 1, "Asian", 
+                       ifelse(df$ethnicity_1 == 2, "Black",
+                              ifelse(df$ethnicity_1 == 3, "Mixed",
+                                     ifelse(df$ethnicity_1 == 4, "White",
+                                            ifelse(df$ethnicity_1 == 5, "Other", NA)))))
+
+df$education <- ifelse(df$education_1 == 1, "undergraduate", 
+                       ifelse(df$education_1 == 2, "postgraduate",
+                              ifelse(df$education_1 == 3, "doctorate", NA)))
+
+df$ta_experience <- ifelse(df$ta_experience_1 == 1, TRUE, 
+                           ifelse(df$ta_experience_1 == 2, FALSE, NA))
+
+
+df$school_level <- ifelse(df$school_level_1 == 1, "primary", 
+                       ifelse(df$school_level_1 == 2, "secondary",
+                              ifelse(df$school_level_1 == 3, "unknown", NA)))
+
+df$school_ark <- ifelse(df$school_ark_1 == 1, "Ark", 
+                          ifelse(df$school_ark_1 == 2, "non-Ark",
+                                 ifelse(df$school_ark_1 == 3, "unknown", NA)))
+
 
 # --- compute scales ---
 
@@ -64,7 +104,41 @@ df$task_absorption <- rowSums(df[, grepl("dammq_task_absorption_", names(df))])
 df$preference_challenge <- rowSums(df[, grepl("dammq_preference_challenge_", names(df))])
 df$task_pleasure <- rowSums(df[, grepl("dammq_task_pleasure_", names(df))])
 
+# 5. n-back task
+
+# overwrite nback file with file path
+df[, "nback_1"] <- ifelse(df[, "nback_1"] == "", NA, file.path(dir, "psytoolkit", "experiment_data", df[, "nback_1"]))
+
+# compute accuracy
+df$nback_accuracy <- apply(df[grep("nback_1", names(df))], MARGIN = 1, compute_accuracy) # function defined in separate file
 
 
+##### --- extract data --- #####
 
-df[, grep("TIME_start", names(df)):ncol(df)]
+# check all newly created columns
+start_col <- grep("TIME_total", names(df)) + 1
+data <- df[, start_col:ncol(df)]
+
+# write data
+write.csv(data, "pretest_data.csv", row.names = F)
+
+
+# create master spreadsheet
+# all.x creates a row for each ppt that had consented to participate
+master <- merge(consent, bookings, by = "pseudonym", all.x = T)
+
+# remove unneccasy cols
+master$name <- NULL
+master$consent <- NULL
+master$booking_confirm <- NULL
+master$StartDate <- NULL
+master$EndDate <- NULL
+
+master$ppt_phone <- paste0("0", master$ppt_phone) # add zero to phone number
+
+
+# next to-do:
+# write file
+#write.csv(consent, "master_spreadsheet.csv", row.names = F)
+
+
