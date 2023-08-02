@@ -3,6 +3,11 @@
 rm(list = ls())
 dir <- getwd()
 source("compute_accuracy.R")
+source("passwords.R")
+
+
+# make reproducible
+set.seed(189) # number of sim slots available
 
 ##### --- read in data ---- #####
 
@@ -32,10 +37,10 @@ bookings$pseudonym <- toupper(bookings$pseudonym) # standardise
 
 # reduce to relevant columns
 bookings <- bookings[, c("pseudonym", "Customer.Name", "Customer.Email", "Customer.Phone", "Date.Time" )]
-names(bookings) <- c("pseudonym", "ppt_name", "ppt_email", "ppt_phone", "dt_booking")
+names(bookings) <- c("pseudonym", "ppt_name", "ppt_email", "ppt_phone", "start_lobby")
 
 # make booking a dt object
-bookings$dt_booking <- as.POSIXct(bookings$dt_booking, format = "%d/%m/%Y %H:%M")
+bookings$start_lobby <- as.POSIXct(bookings$start_lobby, format = "%d/%m/%Y %H:%M")
 
 
 # 3. PSYTOOLKIT: psytoolkit was used to measure individual differences
@@ -43,10 +48,14 @@ bookings$dt_booking <- as.POSIXct(bookings$dt_booking, format = "%d/%m/%Y %H:%M"
 df <- read.csv(file = file.path(dir, "psytoolkit", "data.csv"))
 df <- subset(df, pseudonym_1 != "") # remove all files that do not contain a pseudonym
 df <- subset(df, pseudonym_1 != "o5s9") # test run stef
+df <- subset(df, pseudonym_1 != "test") # test run
+df <- subset(df, pseudonym_1 != "I9i") # test run
+df <- subset(df, participant != "s.748af9fe-22d2-466b-8b51-f5c71549fafd.txt") # ppt did survey twice
+df <- subset(df, participant != "s.776191cc-959c-4417-97cd-ba5582a3b640.txt") # ppt did survey twice
 
 # --- demographic data ---
 df$pseudonym <- toupper(df$pseudonym_1) # standardise
-df$complete <- ifelse(is.na(df$TIME_total), FALSE, TRUE)
+df$complete_psytoolkit <- ifelse(is.na(df$TIME_total), FALSE, TRUE)
 df$age <- df$age
 df$gender <- ifelse(df$gender_1 == 1, "male", 
                     ifelse(df$gender_1 == 2, "female",
@@ -134,11 +143,75 @@ master$booking_confirm <- NULL
 master$StartDate <- NULL
 master$EndDate <- NULL
 
-master$ppt_phone <- paste0("0", master$ppt_phone) # add zero to phone number
+master$ppt_phone <- ifelse(!is.na(master$ppt_phone), paste0("(+44)", master$ppt_phone), NA) # add zero to phone number
 
 
-# next to-do:
-# write file
-#write.csv(consent, "master_spreadsheet.csv", row.names = F)
+# read in slot allocation
+slots <- read.csv("slot_allocation.csv")
+slots <- subset(slots, slots$Start.Lobby != "")
+slots$start_lobby <- paste(slots$Date, slots$Start.Lobby)
+slots$start_lobby <- as.POSIXct(slots$start_lobby, format = "%d/%m/%Y %H:%M:%S")
+slots$start_simulator <- paste(slots$Date, slots$Start.Simulator)
+slots$start_simulator <- as.POSIXct(slots$start_simulator, format = "%d/%m/%Y %H:%M:%S")
+slots <- slots[, c("start_lobby", "lobby", "start_simulator", "coach")]
 
+# DEBUG: create a df with matching booking slots to pilot data
+tmp <- data.frame("start_lobby" = master$start_lobby)
+tmp <- na.omit(tmp)
+tmp$lobby <- rep_len(c("Briony", "Stef"), length.out = nrow(tmp))
+tmp$start_simulator <- tmp$start_lobby + lubridate::minutes(15) 
+tmp$coach <- rep_len(c("Jen", "Naz"), length.out = nrow(tmp))
+
+# merge slots (DEBUG: tmp) and master
+# master <- merge(master, tmp, by = "start_lobby", all.x = T)
+master <- merge(master, tmp, by = "start_lobby")
+
+# complete data checks
+tmp <- data[, c("pseudonym", "complete_psytoolkit", "school_ark", "fo", "conscientiousness", "m_app", "task_pleasure", "nback_accuracy")]
+names(tmp) <-  c("pseudonym", "complete_psytoolkit", "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback")
+complete <- function(x) {
+  return(ifelse(is.na(x), F, T))
+}
+tmp[,3:8] <- apply(tmp[,3:8], MARGIN = 2, FUN = complete)
+
+# merge with master
+master <- merge(master, tmp, by = "pseudonym", all.x = T)
+master <- master[, c("pseudonym", "ppt_name", "ppt_email", "ppt_phone", "start_lobby", "lobby", "start_simulator", "coach", "complete_psytoolkit", "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback")]
+
+##### --- randomisation --- #####
+
+# create separate data frame to randomise
+rand <- master[, c("start_simulator", "ppt_name", "coach")]
+
+# create vector with all group names
+group <- c("decomposed", "recomposed", "holistic")
+# replicate the group object to create vector that matches sum of participants that have signed up (= nrow(master))
+# if nrow(master) is not a multiple of 3, only elements of group up to the remainder index will be added
+group_vec <- rep_len(group, length.out = nrow(master))
+# sample without replacement from group vec --> RANDOMISATION
+rand$treatment_arm <- sample(group_vec, size = nrow(master), replace = F)
+
+# add columns to capture feedback
+rand$feedback_1_core_a <- ""
+rand$feedback_1_core_b <- ""
+rand$feedback_1_core_c <- ""
+rand$feedback_2_core_a <- ""
+rand$feedback_2_core_b <- ""
+rand$feedback_2_core_c <- ""
+
+# --- save all files --- #
+
+# save file ***PASSWORD PROTECTED****
+xlsx::write.xlsx(rand, "randomisation.xlsx", sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_rand)
+
+
+
+# DEBUG/TEST
+tmp <- data.frame("id" = 1:189)
+group_vec <- rep_len(group, length.out = 189)
+tmp$group <- sample(group_vec, size = 189, replace = F)
+tapply(tmp$id, tmp$group, length)
+
+
+xlsx::write.xlsx(master, "master_spreadsheet.xlsx", sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_master)
 
