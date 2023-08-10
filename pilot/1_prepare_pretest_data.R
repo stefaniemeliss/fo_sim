@@ -1,22 +1,29 @@
 ##### --- set up --- #####
 
+# empty work space
 rm(list = ls())
-dir <- getwd()
-source("compute_accuracy.R")
-source("passwords.R")
 
+# get directories
+dir_root <- getwd()
+data_collection <- "pilot"
+dir <- file.path(dir_root, data_collection)
+
+# read in files
+source(file.path(dir_root, "compute_accuracy.R"))
+source(file.path(dir_root, "passwords.R"))
+options(xlsx.datetime.format="YYYY/mm/dd hh:mm")
 
 # make reproducible
 set.seed(189) # number of sim slots available
 
 ##### --- read in data ---- #####
 
-# data from the project stems from multuiple sources
+# data from the project stems from multiple sources
 
 # 1. CONSENT: qualtrics is used to collect consent
 
-file_consent <- list.files(pattern = "consent")
-consent <- read.csv(file = file_consent)
+file_consent <- list.files(path = dir, pattern = "consent")
+consent <- read.csv(file = file.path(dir, file_consent))
 
 # remove first two rows
 consent <- consent[grepl("2023", consent$StartDate),]
@@ -26,12 +33,12 @@ consent$pseudonym <- toupper(consent$pseudonym) # standardise
 
 # 2. BOOKING: microsoft bookings is used to book a slot
 
-file_bookings <- list.files(pattern = "Bookings")
-bookings <- read.delim(file = file_bookings)
+file_bookings <- list.files(path = dir, pattern = "Bookings")
+bookings <- read.delim(file = file.path(dir, file_bookings))
 
 # get pseudonym
-bookings$pseudonym <- gsub("{  Please enter your personal pseudonym: ", "", bookings$Custom.Fields, fixed = T)
-bookings$pseudonym <- gsub("}", "", bookings$pseudonym, fixed = T)
+bookings$pseudonym <- gsub("[[:punct:]]", "", bookings$Custom.Fields) # remove all speical characters
+bookings$pseudonym <- gsub("  Please enter your personal pseudonym ", "", bookings$pseudonym)
 bookings$pseudonym <- toupper(bookings$pseudonym) # standardise
 
 
@@ -42,14 +49,14 @@ names(bookings) <- c("pseudonym", "ppt_name", "ppt_email", "ppt_phone", "start_l
 # make booking a dt object
 bookings$start_lobby <- as.POSIXct(bookings$start_lobby, format = "%d/%m/%Y %H:%M")
 
-
 # 3. PSYTOOLKIT: psytoolkit was used to measure individual differences
 
 df <- read.csv(file = file.path(dir, "psytoolkit", "data.csv"))
 df <- subset(df, pseudonym_1 != "") # remove all files that do not contain a pseudonym
 df <- subset(df, pseudonym_1 != "o5s9") # test run stef
 df <- subset(df, pseudonym_1 != "test") # test run
-df <- subset(df, pseudonym_1 != "I9i") # test run
+df <- subset(df, pseudonym_1 != "O7H1") # test run
+df <- subset(df, nchar(pseudonym_1) == 4) # test run
 df <- subset(df, participant != "s.748af9fe-22d2-466b-8b51-f5c71549fafd.txt") # ppt did survey twice
 df <- subset(df, participant != "s.776191cc-959c-4417-97cd-ba5582a3b640.txt") # ppt did survey twice
 
@@ -129,12 +136,13 @@ start_col <- grep("TIME_total", names(df)) + 1
 data <- df[, start_col:ncol(df)]
 
 # write data
-write.csv(data, "pretest_data.csv", row.names = F)
+write.csv(data, file.path(dir, "pretest_data.csv"), row.names = F)
 
 
-# create master spreadsheet
+# --- create master spreadsheet ---
+
 # all.x creates a row for each ppt that had consented to participate
-master <- merge(consent, bookings, by = "pseudonym", all.x = T)
+master <- merge(consent, bookings, by = "pseudonym", all = T)
 
 # remove unneccasy cols
 master$name <- NULL
@@ -147,13 +155,13 @@ master$ppt_phone <- ifelse(!is.na(master$ppt_phone), paste0("(+44)", master$ppt_
 
 
 # read in slot allocation
-slots <- read.csv("slot_allocation.csv")
-slots <- subset(slots, slots$Start.Lobby != "")
-slots$start_lobby <- paste(slots$Date, slots$Start.Lobby)
-slots$start_lobby <- as.POSIXct(slots$start_lobby, format = "%d/%m/%Y %H:%M:%S")
-slots$start_simulator <- paste(slots$Date, slots$Start.Simulator)
-slots$start_simulator <- as.POSIXct(slots$start_simulator, format = "%d/%m/%Y %H:%M:%S")
-slots <- slots[, c("start_lobby", "lobby", "start_simulator", "coach")]
+# slots <- read.csv("slot_allocation.csv")
+# slots <- subset(slots, slots$Start.Lobby != "")
+# slots$start_lobby <- paste(slots$Date, slots$Start.Lobby)
+# slots$start_lobby <- as.POSIXct(slots$start_lobby, format = "%d/%m/%Y %H:%M:%S")
+# slots$start_simulator <- paste(slots$Date, slots$Start.Simulator)
+# slots$start_simulator <- as.POSIXct(slots$start_simulator, format = "%d/%m/%Y %H:%M:%S")
+# slots <- slots[, c("start_lobby", "lobby", "start_simulator", "coach")]
 
 # DEBUG: create a df with matching booking slots to pilot data
 tmp <- data.frame("start_lobby" = master$start_lobby)
@@ -176,12 +184,76 @@ tmp[,3:8] <- apply(tmp[,3:8], MARGIN = 2, FUN = complete)
 
 # merge with master
 master <- merge(master, tmp, by = "pseudonym", all.x = T)
-master <- master[, c("pseudonym", "ppt_name", "ppt_email", "ppt_phone", "start_lobby", "lobby", "start_simulator", "coach", "complete_psytoolkit", "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback")]
+
+# add additional columns
+master$show <- ""
+master$pretest_chased <- ifelse(master$complete_psytoolkit == F, FALSE, NA)
+master$received_vids <- ""
+master$received_transcripts <- ""
+master$reviewed_vids <- ""
+master$reviewed_transcript <- ""
+master$coded_vids <- ""
+master$comments_vids <- ""
+master$comments_transcripts <- ""
+master$comments_coding <- ""
+
+# re-order columns
+master <- master[, c("pseudonym", "ppt_name", "ppt_email", "ppt_phone", "start_lobby", "lobby", "start_simulator", "coach", 
+                     "complete_psytoolkit", "pretest_chased", 
+                     "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback", 
+                     "show", "received_vids", "received_transcripts", "reviewed_vids", "reviewed_transcript", "coded_vids", "comments_vids", "comments_transcripts", "comments_coding")]
+
+# order sim slots chronologically
+master <- master[order(master$start_simulator), ]
+
+
+# create dictionary
+dict <- data.frame(variable = names(master))
+dict$explanation <- c("Participant pseudonym, USE FOR FILE NAMES",
+                      "Name (as provided in bookings form)",
+                      "Email (as provided in bookings form)",
+                      "Phone number (as provided in bookings form)",
+                      "Scheduled start time of LOBBY session in format YYYY/MM/DD hh:mm",
+                      "Assigned staff for lobby",
+                      "Scheduled start time of simulator session in format YYYY/MM/DD hh:mm",
+                      "Assigned staff for coaching",
+                      "Data validation: is pretest complete",
+                      "Data validation: has incomplete data been chased; NA if pretest complete",
+                      rep("Data validation for routing as necessary: is pretest element complete", 6),
+                      
+                      "record of whether session took place",
+                      
+                      rep("Data validation: has simulator data been received", 2),
+                      rep("Data validation/fidelity: has simulator data been reviewed", 2),
+                      "Data validation: has video been coded",
+                      rep("Data validation/fidelity: comments and notes", 3))
+dict$levels_1 <- ""
+dict$levels_2 <- ""
+dict$levels_3 <- ""
+dict$levels_4 <- "" 
+dict$levels_5 <- "" 
+
+dict$levels_1[dict$variable == "show"] <- "show"
+dict$levels_2[dict$variable == "show"] <- "no show"
+dict$levels_3[dict$variable == "show"] <- "cancelled"
+dict$levels_4[dict$variable == "show"] <- "rebooked"
+
+dict$levels_1[c(grep("received", dict$variable), grep("reviewed", dict$variable), grep("coded", dict$variable))] <- TRUE
+dict$levels_2[c(grep("received", dict$variable), grep("reviewed", dict$variable), grep("coded", dict$variable))] <- FALSE
+dict$levels_3[c(grep("received", dict$variable), grep("reviewed", dict$variable), grep("coded", dict$variable))] <- NA
+
+xlsx::write.xlsx(master, file.path(dir, "master_spreadsheet.xlsx"), sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_master)
+xlsx::write.xlsx(master, file.path(dir, "master_spreadsheet.xlsx"), sheetName="participant_info", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+xlsx::write.xlsx(dict, file.path(dir, "master_spreadsheet.xlsx"), sheetName="columns_explained", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
+
+
+
 
 ##### --- randomisation --- #####
 
 # create separate data frame to randomise
-rand <- master[, c("start_simulator", "ppt_name", "coach")]
+rand <- master[, c("start_simulator", "pseudonym", "ppt_name", "coach")]
+
 
 # create vector with all group names
 group <- c("decomposed", "recomposed", "holistic")
@@ -191,21 +263,6 @@ group_vec <- rep_len(group, length.out = nrow(master))
 # sample without replacement from group vec --> RANDOMISATION
 rand$treatment_arm <- sample(group_vec, size = nrow(master), replace = F)
 
-# add columns to capture feedback
-rand$feedback_1_core_a <- ""
-rand$feedback_1_core_b <- ""
-rand$feedback_1_core_c <- ""
-rand$feedback_2_core_a <- ""
-rand$feedback_2_core_b <- ""
-rand$feedback_2_core_c <- ""
-
-# --- save all files --- #
-
-# save file ***PASSWORD PROTECTED****
-xlsx::write.xlsx(rand, "randomisation.xlsx", sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_rand)
-
-
-
 # DEBUG/TEST
 tmp <- data.frame("id" = 1:189)
 group_vec <- rep_len(group, length.out = 189)
@@ -213,5 +270,51 @@ tmp$group <- sample(group_vec, size = 189, replace = F)
 tapply(tmp$id, tmp$group, length)
 
 
-xlsx::write.xlsx(master, "master_spreadsheet.xlsx", sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_master)
+# add columns to capture feedback
+rand$show <- ""
+rand$feedback_1_core_a <- ""
+rand$feedback_1_core_b <- ""
+rand$feedback_1_core_c <- ""
+rand$feedback_2_core_a <- ""
+rand$feedback_2_core_b <- ""
+rand$feedback_2_core_c <- ""
+rand$comment <- ""
+
+# order sim slots chronologically
+rand <- rand[order(rand$start_simulator), ]
+
+dict <- data.frame(variable = names(rand))
+dict$explanation <- c("Scheduled start time of simulator session in format YYYY/MM/DD hh:mm",
+                      "Participant pseudonym, USE FOR FILE NAMES",
+                      "Name of participant, as info for coaches",
+                      "assigned coach",
+                      "which condition the participant is in",
+                      "record of whether session took place",
+                      rep("coach use only: was core practice shown/which script was used", 6),
+                      "coach use only: any comments related to session, incl.  problems")
+dict$levels_1 <- ""
+dict$levels_2 <- ""
+dict$levels_3 <- ""
+dict$levels_4 <- ""
+dict$levels_5 <- "" 
+
+dict$levels_1[dict$variable == "show"] <- "show"
+dict$levels_2[dict$variable == "show"] <- "no show"
+dict$levels_3[dict$variable == "show"] <- "cancelled"
+dict$levels_4[dict$variable == "show"] <- "rebooked"
+
+dict$levels_1[grep("feedback", dict$variable)] <- "did"
+dict$levels_2[grep("feedback", dict$variable)] <- "did not"
+dict$levels_3[grep("feedback", dict$variable)] <- "partial"
+
+
+# --- save all files --- #
+
+
+# save file ***PASSWORD PROTECTED****
+xlsx::write.xlsx(rand, file.path(dir, "simulator_slots.xlsx"), sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_rand)
+xlsx::write.xlsx(rand, file.path(dir, "simulator_slots.xlsx"), sheetName="Slots", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+xlsx::write.xlsx(dict, file.path(dir, "simulator_slots.xlsx"), sheetName="columns_explained", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
+
+
 
