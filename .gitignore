@@ -5,6 +5,6 @@
 *.Rproj
 *.csv
 *.tsv
-psytoolkit/*
+*/psytoolkit/*
 passwords.R
 *.xlsx
