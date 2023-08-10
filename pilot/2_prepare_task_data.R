@@ -1,7 +1,10 @@
+# empty work space
 rm(list = ls())
-dir <- getwd()
-# make reproducible
-set.seed(189) # number of sim slots available
+
+# get directories
+dir_root <- getwd()
+data_collection <- "pilot"
+dir <- file.path(dir_root, data_collection)
 
 ##### --- read in in-task data ---- #####
 
