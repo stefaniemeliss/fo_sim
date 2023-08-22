@@ -1,0 +1,139 @@
+---
+title: "FO Simulator: preliminary data checks and outlier identification"
+author: "Stefanie Meliss"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# libraries
+library(kableExtra)
+library(dplyr)
+library(GGally)
+
+# empty work space
+rm(list = ls())
+
+# get directories
+dir <- getwd()
+
+# process data: assumes this has been run
+source("C:/Users/stefanie.meliss/OneDrive - Ambition Institute/code/colour_palette.R")
+# source(file.path(dir_root, "1_prepare_pretest_data.R"))
+
+# function to determine outliers
+is_outlier_iqr <- function(x) {
+  return(x < quantile(x, 0.25, na.rm = T) - 1.5 * IQR(x, na.rm = T) | x > quantile(x, 0.75, na.rm = T) + 1.5 * IQR(x, na.rm = T))
+}
+
+is_outlier_sd <- function(x) {
+  return(x < mean(x, na.rm = T) - 3 * sd(x, na.rm = T) | x > mean(x, na.rm = T) + 3 * sd(x, na.rm = T))
+}
+
+# read in data
+file = file.path(dir, "pretest.xlsx")
+df <- xlsx::read.xlsx(file, sheetName = "SCALES")
+
+```
+
+
+As a first step, all descriptives are computed for all variables measured. The sum score for each scale was computed following instructions given by the scale author(s). We have the same number of observations for each scale. To process n-back data, trial-level data was used (after removing practice trails). For each participant, event counts (n-back trial vs. non n-back trial) and performance according to signal detection theory (i.e., hits, misses, false alarms) were extracted. Additionally, rates for each event/performance type were computed.  
+
+
+```{r, echo = F, results='asis'}
+# compute descriptives for all scales and nback data
+first_col <- which(names(df) == "fo")
+tmp <- psych::describe(df[, first_col:ncol(df)])
+
+# round values
+tmp <- round(tmp, 2)
+# add scale name
+tmp$vars <- row.names(tmp)
+
+# print to markdown
+kbl(tmp, caption = "Measurement descriptives", row.names = F) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+
+
+```
+
+Next, outliers are identified based on two criteria: (1) all values are considered outliers that are outside +/- 1.5 IQRs, or (2) all values outside +/- 3 SD from the mean. The results reveal that the IQR method is more sensitive to outliers.
+
+```{r, echo = F, results='asis'}
+
+# determien col names to check for outliers
+scales <- names(df)[grep("fo|conscient|m_a|p_a|task_|pref", names(df))]
+scales <- scales[!grepl("fo_", scales)]
+scales <- c(scales, "rate_accuracy")
+
+# for each scale, check for outliers
+outlier_iqr <- df[, c("pseudonym", scales)]
+outlier_sd <- df[, c("pseudonym", scales)]
+
+# count number of outliers
+outlier_iqr[, paste0(scales, "_outlier")] <- apply(df[scales], MARGIN = 2, is_outlier_iqr)
+outlier_sd[, paste0(scales, "_outlier")] <- apply(df[scales], MARGIN = 2, is_outlier_sd) 
+
+# combine to one table
+tmp <- rbind(
+  colSums(outlier_iqr[, grepl("outlier", names(outlier_iqr))], na.rm = T), #IQR
+  colSums(outlier_sd[, grepl("outlier", names(outlier_sd))], na.rm = T) # SD
+)
+tmp <- as.data.frame(tmp)
+row.names(tmp) <- c("outlier_iqr", "outlier_Sd")
+
+# print to markdown
+kbl(tmp, caption = "Outlier count") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+Below, the pseudonyms of participants with outlying values are identified:
+
+```{r, echo = F, results='asis'}
+
+for (scale in scales) {
+  
+  tmp <- outlier_iqr[outlier_iqr[, paste0(scale, "_outlier")] == T, c("pseudonym", scale)]
+  tmp <- subset(tmp, !is.na(pseudonym))
+  
+  if (nrow(tmp) > 0) {
+    print(kbl(tmp, caption = paste(scale), row.names = F) %>%
+            kable_styling(bootstrap_options = c("striped", "hover", "condensed")))
+    cat("\n")
+  }
+  
+  
+}
+
+cat("**No nback data:", outlier_iqr$pseudonym[is.na(outlier_iqr[, paste0(scale, "_outlier")])], "**\n\n")
+
+```
+
+For the nback, additional checks were performed to identify ppt that have misunderstood the task. This was assumed if participants had a response rate (any key press) equal to 1 (n = 1) or equal to 0 (n = 5), if their hit rate was 0 (n = 7) or if the hit rate was smaller than the false alarm rate (n = 3). In total, 9 participants are identified based on these criteria. Of note, all of them have also been captured using the IQR outlier criteria.    
+
+```{r, echo = F, results='asis'}
+rates_nback <- names(df)[grep("rate_", names(df))]
+
+
+# remove ppt that did not respond at all or responded in all trials or have a hitrate of 0
+desc <- df[df$rate_response == 0 | df$rate_response == 1 | df$rate_hits == 0 | df$rate_hits < df$rate_fa, c("pseudonym", rates_nback)]
+desc <- na.omit(desc)
+
+kbl(desc, caption = "participants who likely misunderstood nback task", row.names = F) %>%
+            kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+
+### Next steps  
+  
+- IQR criteria is applied to identify outliers in FO and nback accuracy rate.  
+- As no participant was identified as a consistent outlier across all scales, it is less likely that the scale points were misunderstood throughout. Especially for DAMMQ and AGQ-R, outliers were inconsistent across the sum of sub-scales, hence suggesting that any outlying (low) values indeed express the ratings given/intended by the participant.  
+- For the outliers in the FO scale, participants were contacted to verify their response using a single item response ("Feedback contributes to my success at work.").  
+- For outliers with regards to nback accuracy, participants were provided with more detailed instructions before being invited to complete the task again.  
+  
+  
