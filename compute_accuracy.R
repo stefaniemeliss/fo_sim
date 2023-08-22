@@ -2,7 +2,7 @@
 compute_accuracy <- function(file_nback){
   
   # # debug:
-  # file_nback <- file.path(dir, "psytoolkit", "experiment_data", "NBack_task_nonfinal.2023-07-06-1703.data.6df9f06e-e7d7-44d2-aec7-dd0f51af13d0.txt")
+  # file_nback <- file.path(dir, "psytoolkit", "experiment_data", "NBack_task_nonfinal.2023-08-09-1030.data.b2dbc2e6-81c3-4205-9aa1-2f153f423dc9.txt")
   
   if (is.na(file_nback)) {
     return(NA)
@@ -39,22 +39,37 @@ compute_accuracy <- function(file_nback){
     # 1. discard practice trials (first block)
     data <- subset(data, V1 != 1) # V1 = block number
     
-    # 2. determine total counts
-    total_nback <- sum(data$V3 == 1) # V3 = Type of trial (1=a matching stimulus)
-    total_non <- sum(data$V3 == 0) # V3 = Type of trial (0=a non-matching stimulus)
-    total_hits <- sum(data$V5 == 1) # V5 = Match (1 means participants matched correctly, 0 otherwise; only meaningful on match trials)
-    total_misses <- sum(data$V6 == 1) # V6 = Miss (1 means participants missed, 0 otherwise; only meaningful on non-matching trials)
-    total_fa <- sum(data$V7 == 1) # V7 = False Alarm (1 means participants wrongly pressed button, 0 otherwise; only meaningful on non-matching trials)
+    # 2. create df
+    out <- data.frame(nback_1 = file_nback) # for merge
     
-    # 3. compute rates
-    rate_hits <- total_hits/total_nback
-    rate_misses <- total_misses / total_nback
-    rate_fa <- total_fa / total_non
+    # 3. determine total counts
+    out$total_nback <- sum(data$V3 == 1) # V3 = Type of trial (1=a matching stimulus)
+    out$total_non <- sum(data$V3 == 0) # V3 = Type of trial (0=a non-matching stimulus)
+    out$total_hits <- sum(data$V5 == 1) # V5 = Match (1 means participants matched correctly, 0 otherwise; only meaningful on match trials)
+    out$total_misses <- sum(data$V6 == 1) # V6 = Miss (1 means participants missed, 0 otherwise; only meaningful on non-matching trials)
+    out$total_fa <- sum(data$V7 == 1) # V7 = False Alarm (1 means participants wrongly pressed button, 0 otherwise; only meaningful on non-matching trials)
     
-    # 4. compute accuracy and return
-    accuracy <- rate_hits - rate_fa
+    out$total_responses <- out$total_hits + out$total_fa # how many times did ppt press key 'M'
     
-    return(accuracy)
+    # 4. compute rates
+    out$rate_nback <- out$total_nback / nrow(data)
+    out$rate_non <- out$total_non / nrow(data)
+    out$rate_hits <- out$total_hits / out$total_nback
+    out$rate_misses <- out$total_misses / out$total_nback
+    out$rate_fa <- out$total_fa / out$total_non
+    out$rate_response <- out$total_responses / nrow(data)
+    
+    # 5. compute accuracy and return
+    out$rate_accuracy <- out$rate_hits - out$rate_fa
+    
+    
+    # return data
+    return(out)
   }
   
 }
+
+
+# test
+# file_nback <- file.path(dir, "psytoolkit", "experiment_data", "NBack_task_nonfinal.2023-08-09-1030.data.b2dbc2e6-81c3-4205-9aa1-2f153f423dc9.txt")
+# compute_accuracy(file_nback = file_nback)
