@@ -18,7 +18,7 @@ library(dplyr)
 
 # data from the project stems from multiple sources
 
-# 1. CONSENT: qualtrics is used to collect consent
+#### 1. CONSENT: qualtrics is used to collect consent ####
 
 file_consent <- list.files(path = dir, pattern = "consent_")
 consent <- read.csv(file = file.path(dir, file_consent))
@@ -71,7 +71,7 @@ consent <- unique(consent) # remove duplicates
 consent %>% group_by(pseudonym) %>% summarise(n = n()) %>% subset(n > 1)
 
 
-# 2. BOOKING: microsoft bookings is used to book a slot
+#### 2. BOOKING: microsoft bookings is used to book a slot ####
 
 file_bookings <- list.files(path = dir, pattern = "Bookings")
 bookings <- read.delim(file = file.path(dir, file_bookings))
@@ -98,7 +98,7 @@ bookings$start_lobby <- as.POSIXct(bookings$start_lobby, format = "%d/%m/%Y %H:%
 bookings$start_lobby
 bookings$start_lobby <- as.POSIXct(strptime(bookings$start_lobby, "%Y-%m-%d %H:%M:%S"), tz = "UTC")
 
-# 3. PSYTOOLKIT: psytoolkit was used to measure individual differences
+#### 3. PSYTOOLKIT: psytoolkit was used to measure individual differences ####
 
 df <- read.csv(file = file.path(dir, "psytoolkit", "data.csv"))
 
@@ -109,32 +109,44 @@ df$pseudonym <- gsub("[[:blank:]]", "", df$pseudonym) # standardise
 
 df <- subset(df, pseudonym != "") # remove all files that do not contain a pseudonym
 df <- subset(df, pseudonym != "TEST") # remove all files that do not contain a pseudonym
-
-tmp <- df
-tmp$pseudonym_1 <- tmp$pseudonym
-tmp$pseudonym <- NULL
-
-xlsx::write.xlsx(tmp, file.path(dir, "pretest.xlsx"), sheetName="RAW", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-
+df <- subset(df, pseudonym != "O7H1") # remove all files that do not contain a pseudonym
 
 # CHECK
 df %>% group_by(pseudonym) %>% summarise(n = n()) %>% subset(n > 1)
 
+# fix mismatch
+df$pseudonym[df$pseudonym == "17D1"] <- "I7D1"
+df$pseudonym[df$pseudonym == "R1E1"] <- "R1R1"
+df$pseudonym[df$pseudonym == "A9A1"] <- "A8A1"
+df$pseudonym[df$pseudonym == "T3Y9"] <- "T3Y8"
+
+# write raw data (with fixed pseudonym)
+tmp <- df
+tmp$pseudonym_1 <- tmp$pseudonym
+tmp$pseudonym <- NULL
+
+xlsx::write.xlsx(tmp, file.path(dir, "pretest_ARK.xlsx"), sheetName="RAW", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+# delete participants with more than one submission
 df <- subset(df, participant != "s.511ee964-e54a-4d7f-b19e-e7a2b6037a7e.txt") # A2M1: 1st attempt at Qs completed incorrectly - to be deleted; use 2nd submission
 df <- subset(df, participant != "s.6095ab96-9324-4474-9fcd-69591a202aab.txt") # A0D1: more than 1 submission, delete empty attempt
 df <- subset(df, participant != "s.06a3c0ab-c4fc-4eb4-91fb-0d0ea8f78f8a.txt") # E1A1: more than 1 submission, delete incomplete submission
 df <- subset(df, participant != "s.6274ba39-9f94-42d5-b65e-5a4a79085838.txt") # O0A3: more than 1 submission, delete incomplete submission
 df <- subset(df, participant != "s.d0b15720-06bb-4b93-b6d4-3873043d7d2b.txt") # O0U1: more than 1 submission, delete later attempt
 
+# CHECK
+df %>% group_by(pseudonym) %>% summarise(n = n()) %>% subset(n > 1)
 
 df$complete_psytoolkit <- ifelse(is.na(df$TIME_total), FALSE, TRUE)
 
 # --- demographic data ---
 
 df$age <- df$age
+
 df$gender <- ifelse(df$gender_1 == 1, "male", 
                     ifelse(df$gender_1 == 2, "female",
                            ifelse(df$gender_1 == 3, "different", NA)))
+
 df$ethnicity <- ifelse(df$ethnicity_1 == 1, "Asian", 
                        ifelse(df$ethnicity_1 == 2, "Black",
                               ifelse(df$ethnicity_1 == 3, "Mixed",
@@ -156,13 +168,6 @@ df$school_level <- ifelse(df$school_level_1 == 1, "primary",
 df$school_ark <- ifelse(df$school_ark_1 == 1, "Ark", 
                         ifelse(df$school_ark_1 == 2, "non-Ark",
                                ifelse(df$school_ark_1 == 3, "unknown", NA)))
-
-# fix mismatch
-df$pseudonym[df$pseudonym == "17D1"] <- "I7D1"
-df$pseudonym[df$pseudonym == "R1E1"] <- "R1R1"
-df$pseudonym[df$pseudonym == "A9A1"] <- "A8A1"
-df$pseudonym[df$pseudonym == "T3Y9"] <- "T3Y8"
-
 
 
 # --- compute scales ---
@@ -188,7 +193,6 @@ df$m_av <- df$agq_5 + df$agq_11 + df$agq_9
 df$p_app <- df$agq_4 + df$agq_2 + df$agq_8
 df$p_av <- df$agq_12 + df$agq_10 + df$agq_6
 
-
 # 4. DAMMQ
 
 items <- names(df)[grepl("dammq", names(df))]
@@ -202,8 +206,7 @@ df$task_pleasure <- rowSums(df[, items[17:20]])
 
 # overwrite nback file with file path
 df[, "nback_1"] <- ifelse(df[, "nback_1"] == "", NA, file.path(dir, "psytoolkit", "experiment_data", df[, "nback_1"]))
-df[df[, "pseudonym"] == "R1R1", "nback_1"] <- NA # delete observation for ppt who reported to have had issues with the nback
-
+# df[df[, "pseudonym"] == "R1R1", "nback_1"] <- NA # delete observation for ppt who reported to have had issues with the nback
 
 # process nback data
 tmp <- apply(df[grep("nback_1", names(df))], MARGIN = 1, compute_accuracy) # function defined in separate file
@@ -213,7 +216,7 @@ tmp <- na.omit(tmp) # remove all rows with NAs
 # add to df
 df <- merge(df, tmp, by = "nback_1", all.x = T)
 
-nback_cols <- names(df)[grepl("total_|rate_", names(df))]
+nback_cols <- names(df)[grepl("nback|total_|rate_", names(df))] # overrates all counts, rates and file name
 
 # ensure complete data for those ppt that returned to questionnaire using re-routing #
 
@@ -226,6 +229,59 @@ df <- subset(df, participant != "s.a55a8609-7254-4f8e-84a7-45aee5b5baab.txt")
 df[df$pseudonym == "E0A1", nback_cols] <- 
   df[df$pseudonym == "E0A1" & nchar(df$TIME_end) > 0, nback_cols]
 df <- subset(df, participant != "s.1763bd4f-327a-4634-9dc3-8bda3cbb3bf7.txt")
+
+# O2A1 : asked to do nback again because rate_accuracy was 0
+df[df$pseudonym == "O2A1", nback_cols] <- 
+  df[df$pseudonym == "O2A1" & df$TIME_start == "2023-08-22-19-00", nback_cols]
+df <- subset(df, participant != "s.320acf2a-1419-4fce-bbc6-2aad24ee3854.txt")
+
+# R3N1 : asked to do nback again because rate_accuracy below 0
+df[df$pseudonym == "R3N1", nback_cols] <-
+  df[df$pseudonym == "R3N1" & df$TIME_start == "2023-08-31-15-23", nback_cols]
+df <- subset(df, participant != "s.3e600d41-5d1c-4cda-99a7-77e6dfbc58ab.txt")
+df <- subset(df, participant != "s.6efeef2f-0d05-46e7-912b-7bb1ee394660.txt")
+
+# U7N5 : asked to do nback again because rate_accuracy was 0
+df[df$pseudonym == "U7N5", nback_cols] <-
+  df[df$pseudonym == "U7N5" & df$TIME_start == "2023-08-22-19-48", nback_cols]
+df <- subset(df, participant != "s.cd2425fa-b434-4e86-940a-c793d8a8cd18.txt")
+
+# E4H2 : asked to do nback again because rate_accuracy was 0
+df[df$pseudonym == "E4H2", nback_cols] <-
+  df[df$pseudonym == "E4H2" & df$TIME_start == "2023-08-23-00-07", nback_cols]
+df <- subset(df, participant != "s.5571e88c-24bd-4451-b202-c92ae51a388e.txt")
+
+# I2E1 : asked to do feedback orientation again because scale was used backwards
+df[df$pseudonym == "I2E1", grepl("fo", names(df))] <-
+  df[df$pseudonym == "I2E1" & df$TIME_start == "2023-08-23-09-15", grepl("fo", names(df))]
+df <- subset(df, participant != "s.2f01f952-844d-45eb-ad98-f4fbb70dffdd.txt")
+
+# O0U1 : asked to do nback again because rate_accuracy was 0
+df[df$pseudonym == "O0U1", nback_cols] <-
+  df[df$pseudonym == "O0U1" & df$TIME_start == "2023-08-23-09-59", nback_cols]
+df <- subset(df, participant != "s.4daf7214-6e12-4275-b35e-4de9b1be3a0b.txt")
+
+# A2N1 : asked to do nback again because rate_accuracy was 0
+df[df$pseudonym == "A2N1", nback_cols] <-
+  df[df$pseudonym == "A2N1" & df$TIME_start == "2023-08-23-22-41", nback_cols]
+df <- subset(df, participant != "s.897db039-99f5-4465-b68f-795708d618aa.txt")
+
+# I0O3 : asked to do nback again because rate_accuracy was 0
+df[df$pseudonym == "I0O3", nback_cols] <-
+  df[df$pseudonym == "I0O3" & df$TIME_start == "2023-08-31-16-41", nback_cols]
+df <- subset(df, participant != "s.3e98c524-2bbb-4830-a892-de9b3ff06fb4.txt")
+
+# A0N1 : asked to do nback again because rate_accuracy was 0
+df[df$pseudonym == "A0N1", nback_cols] <-
+  df[df$pseudonym == "A0N1" & df$TIME_start == "2023-09-01-13-34", nback_cols]
+df <- subset(df, participant != "s.8309fda2-6df4-434e-a092-9d0598c49f37.txt")
+df <- subset(df, participant != "s.3870973c-b8e7-4823-aa46-2123cefad1ed.txt")
+df <- subset(df, participant != "s.70e4f635-ca40-4647-8da8-5e1eea136473.txt")
+
+# R1R1 : asked to do nback again because rate_accuracy was 0
+df[df$pseudonym == "R1R1", nback_cols] <-
+  df[df$pseudonym == "R1R1" & df$TIME_start == "2023-08-30-17-12", nback_cols]
+df <- subset(df, participant != "s.2d02cf53-2b4b-465c-bd3d-4c6a813db637.txt")
 
 # O7N9: attempted twice to only do nback but no data is transmitted, hence delete
 df <- subset(df, participant != "s.95439e43-cbd0-464a-85d7-ec7fd2d0135f.txt")
@@ -253,8 +309,6 @@ df$complete_psytoolkit[df$pseudonym == "I3A1"] <- TRUE
 tmp <- subset(df, pseudonym == "I3A1")
 tmp <- tmp[order(tmp$TIME_start), ]
 
-
-
 # keep "s.bd5a08fb-c70c-4859-9f1c-96a46f6d1981.txt"
 #df[df$pseudonym == "I3A1" & nchar(df$TIME_end)>0 & df$select_1 == 1, "participant"]
 df <- subset(df, participant != "s.2c981997-5b50-4367-81e2-dfec391cb56a.txt")
@@ -266,16 +320,16 @@ df <- subset(df, participant != "s.81aaf814-0923-4c91-afb0-af966401699d.txt")
 # CHECK data
 df %>% group_by(pseudonym) %>% summarise(n = n()) %>% subset(n > 1)
 
-##### --- extract data --- #####
 
 # check all newly created columns
 start_col <- grep("TIME_total", names(df)) + 1
 data <- df[, start_col:ncol(df)]
 
 # write data
-xlsx::write.xlsx(data, file.path(dir, "pretest.xlsx"), sheetName="SCALES", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
-xlsx::write.xlsx(df, file.path(dir, "pretest.xlsx"), sheetName="PROCESSED", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
+xlsx::write.xlsx(data, file.path(dir, "pretest_ARK.xlsx"), sheetName="SCALES", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
+xlsx::write.xlsx(df, file.path(dir, "pretest_ARK.xlsx"), sheetName="PROCESSED", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
 
+##### --- extract data --- #####
 
 # --- create master spreadsheet ---
 
@@ -330,12 +384,26 @@ master <- merge(master, tmp, by = "pseudonym", all = T)
 master$sim_writing <- ifelse(master$start_simulator < as.POSIXct('2023-08-14 09:00'), "Carlos", "Jayla")
 
 # load in old comments if exist
-if (file.exists(file.path(dir, "master_spreadsheet_cp.csv"))) {
+master_cp <- "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/master_spreadsheet_ARK.xlsx"
+master_safety <- "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/master_spreadsheet_ARK_safetycopy.xlsx"
+
+if (file.exists(master_cp)) {
+  
+  # create copy
+  file.copy(master_cp, master_safety, overwrite = T)
   
   # read in data from previous sessions
-  tmp <- read.csv(file.path(dir, "master_spreadsheet_cp.csv"))
+  tmp <- xlsx::read.xlsx(master_cp, sheetName="participant_info")
+  
+
   tmp <- tmp[, c(grep("pseudonym", names(tmp)), grep("chased", names(tmp)), grep("show", names(tmp)), 
                  grep("vids|transcript|comment", names(tmp)))]
+  
+  # tmp2 <- tmp[tmp$pseudonym == "A2M1", ]
+  # tmp3 <- master[master$pseudonym == "A2M1", ]
+  # 
+  # tmp4 <- merge(tmp3, tmp2, by = c("pseudonym", 
+  #                                  "start_simulator"), all.x = T)
 
   # merge
   master <- merge(master, tmp, by = c("pseudonym"), all = T)
@@ -356,17 +424,18 @@ if (file.exists(file.path(dir, "master_spreadsheet_cp.csv"))) {
   master$comments_transcript <- ""
   master$comments_coding <- ""
   master$comments_general <- ""
+  master$comments_simulator <- ""
   
 }
 
 
 # re-order columns
-master <- master[, c("pseudonym", "ppt_name_signed", "ppt_name", "ppt_email", "ppt_phone", "start_lobby", "lobby", "start_simulator", "coach", 
+master <- master[, c("pseudonym", "start_lobby", "ppt_name_signed", "ppt_name", "ppt_email", "ppt_phone", "start_simulator", "coach", "lobby", 
                      "complete_psytoolkit", "consent_chased", "booking_chased", "pretest_chased", 
                      "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback", 
                      "show", "sim_writing",
                      "received_vids", "received_transcript", "edited_vids",  "reviewed_vids", "reviewed_transcript", "coded_vids", 
-                     "comments_vids", "comments_transcript", "comments_coding", "comments_general")]
+                     "comments_vids", "comments_transcript", "comments_coding", "comments_general", "comments_simulator")]
 
 # order sim slots chronologically
 master <- master[order(master$start_simulator), ]
@@ -377,17 +446,25 @@ master <- unique(master)
 # CHECK data
 master %>% group_by(pseudonym) %>% summarise(n = n()) %>% subset(n > 1)
 
+master <- master[, c("start_lobby", "pseudonym", "ppt_name_signed", "ppt_name", "ppt_email", "ppt_phone", "start_simulator", "coach", "lobby", 
+                     "complete_psytoolkit", "consent_chased", "booking_chased", "pretest_chased", 
+                     "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback", 
+                     "show", "sim_writing",
+                     "received_vids", "received_transcript", "edited_vids",  "reviewed_vids", "reviewed_transcript", "coded_vids", 
+                     "comments_vids", "comments_transcript", "comments_coding", "comments_general", "comments_simulator")]
+
 # create dictionary
 dict <- data.frame(variable = names(master))
-dict$explanation <- c("Participant pseudonym, USE FOR FILE NAMES",
+dict$explanation <- c(
+                      "Scheduled start time of LOBBY session in format YYYY/MM/DD hh:mm",
+                      "Participant pseudonym, USE FOR FILE NAMES",
                       "Name (as provided in consent form)",
                       "Name (as provided in bookings form)",
                       "Email (as provided in bookings form)",
                       "Phone number (as provided in bookings form)",
-                      "Scheduled start time of LOBBY session in format YYYY/MM/DD hh:mm",
-                      "Assigned staff for lobby",
                       "Scheduled start time of simulator session in format YYYY/MM/DD hh:mm",
                       "Assigned staff for coaching",
+                      "Assigned staff for lobby",
                       "Data validation: is pretest complete",
                       "Data validation: has incomplete data been chased; NA if consent complete",
                       "Data validation: has incomplete data been chased; NA if booking complete",
@@ -400,7 +477,7 @@ dict$explanation <- c("Participant pseudonym, USE FOR FILE NAMES",
                       "Data validation: has video been edited",
                       rep("Data validation/fidelity: has simulator data been reviewed", 2),
                       "Data validation: has video been coded",
-                      rep("Data validation/fidelity: comments and notes", 4))
+                      rep("Data validation/fidelity: comments and notes", 5))
 dict$levels_1 <- ""
 dict$levels_2 <- ""
 dict$levels_3 <- ""
@@ -418,9 +495,9 @@ dict$levels_1[c(grep("received", dict$variable), grep("reviewed", dict$variable)
 dict$levels_2[c(grep("received", dict$variable), grep("reviewed", dict$variable), grep("coded", dict$variable), grep("edited", dict$variable))] <- FALSE
 dict$levels_3[c(grep("received", dict$variable), grep("reviewed", dict$variable), grep("coded", dict$variable), grep("edited", dict$variable))] <- NA
 
-xlsx::write.xlsx(master, file.path(dir, "master_spreadsheet.xlsx"), sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_master)
-xlsx::write.xlsx(master, file.path(dir, "master_spreadsheet.xlsx"), sheetName="participant_info", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-xlsx::write.xlsx(dict, file.path(dir, "master_spreadsheet.xlsx"), sheetName="columns_explained", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
+xlsx::write.xlsx(master, file.path(dir, "master_spreadsheet_ARK.xlsx"), sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_master)
+xlsx::write.xlsx(master, file.path(dir, "master_spreadsheet_ARK.xlsx"), sheetName="participant_info", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+xlsx::write.xlsx(dict, file.path(dir, "master_spreadsheet_ARK.xlsx"), sheetName="columns_explained", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
 
 
 
@@ -431,11 +508,16 @@ xlsx::write.xlsx(dict, file.path(dir, "master_spreadsheet.xlsx"), sheetName="col
 rand <- master[, c("start_simulator", "pseudonym", "ppt_name", "lobby",  "coach")]
 
 # add columns to capture feedback #
+sim_cp <- "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/sim_vids/simulator_slots_ARK.xlsx"
+sim_safety <- "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/sim_vids/simulator_slots_ARK_safetycopy.xlsx"
 
-if (file.exists(file.path(dir, "simulator_slots_cp.csv"))) {
+if (file.exists(sim_cp)) {
+  
+  # create copy
+  file.copy(sim_cp, sim_safety, overwrite = T)
   
   # read in data from previous sessions
-  tmp <- read.csv(file.path(dir, "simulator_slots_cp.csv"))
+  tmp <- xlsx::read.xlsx(sim_cp, sheetName="Slots")
   tmp <- subset(tmp, nchar(show) > 0)
   # tmp <- tmp[, c(grep("pseudonym", names(tmp)), grep("ppt_name", names(tmp)), grep("start_sim", names(tmp)), grep("treatment_arm", names(tmp)), grep("show", names(tmp)), grep("feedback", names(tmp)), grep("comment", names(tmp)))]
   
@@ -475,18 +557,26 @@ rand <- subset(rand, !is.na(start_simulator))
 # CHECK data
 rand %>% group_by(pseudonym) %>% summarise(n = n()) %>% subset(n > 1)
 
+# remove duplicates
+# rand <- rand[!duplicated(rand),]
+
 # read in slot allocation
 allocation <- read.delim(file.path(dir, "randomised_group_assignment_n200.txt"), header = F)
 
-# define start and stop
-idx_start <- nrow(tmp)+1
-idx_stop <- nrow(rand)
+if (nrow(rand) > nrow(tmp)) {
+  # define start and stop
+  idx_start <- nrow(tmp)+1
+  idx_stop <- nrow(rand)
 
-# add allocation for remaining slots
-rand$treatment_arm[idx_start:idx_stop] <- allocation[idx_start:idx_stop, "V1"] # only select the first nrow(master) group assignments and add
+  # add allocation for remaining slots
+  rand$treatment_arm[idx_start:idx_stop] <- allocation[idx_start:idx_stop, "V1"] # only select the first nrow(master) group assignments and add
+
+}
+
 
 # DEBUG/TEST
 tapply(rand$pseudonym, rand$treatment_arm, length)
+sum(tmp$treatment_arm != rand$treatment_arm[1:nrow(tmp)])
 
 
 # create variable dictionary
@@ -527,9 +617,9 @@ dict$levels_3[grep("feedback", dict$variable)] <- "partial"
 
 
 # save file ***PASSWORD PROTECTED****
-xlsx::write.xlsx(rand, file.path(dir, "simulator_slots.xlsx"), sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_rand)
-xlsx::write.xlsx(rand, file.path(dir, "simulator_slots.xlsx"), sheetName="Slots", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-xlsx::write.xlsx(dict, file.path(dir, "simulator_slots.xlsx"), sheetName="columns_explained", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
+xlsx::write.xlsx(rand, file.path(dir, "simulator_slots_ARK.xlsx"), sheetName="Sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE, password=password_rand)
+xlsx::write.xlsx(rand, file.path(dir, "simulator_slots_ARK.xlsx"), sheetName="Slots", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+xlsx::write.xlsx(dict, file.path(dir, "simulator_slots_ARK.xlsx"), sheetName="columns_explained", col.names=TRUE, row.names=FALSE, append=TRUE, showNA=TRUE)
 
 
 
