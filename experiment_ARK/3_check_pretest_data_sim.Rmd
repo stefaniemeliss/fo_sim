@@ -1,9 +1,14 @@
 ---
-title: "FO Simulator: preliminary data checks and outlier identification"
+title: "FO Simulator - SIMULATOR STUDY: preliminary data checks and outlier identification"
 author: "Stefanie Meliss"
 date: "`r Sys.Date()`"
 output: html_document
 ---
+
+## Final exclusions sim study  (as of September 4th 2023)
+
+For the analysis below, (incomplete) data from 30 participants was removed due to missing simulator data.  
+  
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -33,8 +38,17 @@ is_outlier_sd <- function(x) {
 }
 
 # read in data
-file = file.path(dir, "pretest.xlsx")
+file = file.path(dir, "pretest_ARK.xlsx")
 df <- xlsx::read.xlsx(file, sheetName = "SCALES")
+
+
+# remove ppt
+file  <- "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Analysis/Final_exclusions_Ark_ITTs_4Sept.xlsx"
+tmp <- xlsx::read.xlsx(file = file, sheetIndex = 1)
+to_remove <- tmp$pseudonym
+
+df <- df %>% filter(!pseudonym %in% to_remove)
+
 
 ```
 
@@ -135,5 +149,4 @@ kbl(desc, caption = "participants who likely misunderstood nback task", row.name
 - As no participant was identified as a consistent outlier across all scales, it is less likely that the scale points were misunderstood throughout. Especially for DAMMQ and AGQ-R, outliers were inconsistent across the sum of sub-scales, hence suggesting that any outlying (low) values indeed express the ratings given/intended by the participant.  
 - For the outliers in the FO scale, participants were contacted to verify their response using a single item response ("Feedback contributes to my success at work.").  
 - For outliers with regards to nback accuracy, participants were provided with more detailed instructions before being invited to complete the task again.  
-  
-  
+    
