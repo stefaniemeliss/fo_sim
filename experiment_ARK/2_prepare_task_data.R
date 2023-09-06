@@ -1,3 +1,10 @@
+###############################################################################
+# this script processes the in-task data from ***ARK data collection phase****
+###############################################################################
+
+# data is collected using qualtrics
+# the script outputs processed data in xlsx format
+
 # empty work space
 rm(list = ls())
 

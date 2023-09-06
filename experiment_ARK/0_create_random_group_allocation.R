@@ -1,3 +1,13 @@
+###############################################################################
+# this script creates N = 200 randomised group allocations used in the study
+###############################################################################
+
+# caveat: run in a new R session only so that the original output is reproduced
+
+# NOTE: in the ARK data collection phase, 112 allocations were used
+# the remaining 88 were transferred to be used in PHASE2
+
+
 # make reproducible
 set.seed(1008) # first day of testing
 
