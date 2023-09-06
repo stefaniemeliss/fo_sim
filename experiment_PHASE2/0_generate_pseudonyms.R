@@ -6,7 +6,7 @@ rm(list = ls())
 
 # get directories
 dir_root <- getwd()
-data_collection <- "experiment"
+data_collection <- "experiment_PHASE2"
 dir <- file.path(dir_root, data_collection)
 
 # generate pseudonyms
