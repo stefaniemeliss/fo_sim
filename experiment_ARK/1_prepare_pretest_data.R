@@ -148,8 +148,6 @@ df <- subset(df, participant != "s.d0b15720-06bb-4b93-b6d4-3873043d7d2b.txt") # 
 # CHECK
 df %>% group_by(pseudonym) %>% summarise(n = n()) %>% subset(n > 1)
 
-df$complete_psytoolkit <- ifelse(is.na(df$TIME_total), FALSE, TRUE)
-
 # --- demographic data ---
 
 df$age <- df$age
@@ -316,7 +314,6 @@ df[df$pseudonym == "I3A1", c(which(names(df)=="fo"), grep("fo_|conscient|m_a|p_a
 df[df$pseudonym == "I3A1", c("age", "gender", "ethnicity", "education", "ta_experience", "school_level", "school_ark")] <- 
   df[df$pseudonym == "I3A1" & df$TIME_start == "2023-08-14-20-39", c("age", "gender", "ethnicity", "education", "ta_experience", "school_level", "school_ark")]
 # mark psytoolkit as complete
-df$complete_psytoolkit[df$pseudonym == "I3A1"] <- TRUE
 tmp <- subset(df, pseudonym == "I3A1")
 tmp <- tmp[order(tmp$TIME_start), ]
 
@@ -381,12 +378,12 @@ slots <- slots[, c("start_lobby", "lobby", "start_simulator", "coach")]
 master <- merge(master, slots, by = "start_lobby", all.x = T)
 
 # complete data checks
-tmp <- data[, c("pseudonym", "complete_psytoolkit", "school_ark", "fo", "conscientiousness", "m_app", "task_pleasure", "rate_accuracy")]
-names(tmp) <-  c("pseudonym", "complete_psytoolkit", "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback")
+tmp <- data[, c("pseudonym", "school_ark", "fo", "conscientiousness", "m_app", "task_pleasure", "rate_accuracy")]
+names(tmp) <-  c("pseudonym", "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback")
 complete <- function(x) {
   return(ifelse(is.na(x), F, T))
 }
-tmp[,3:8] <- apply(tmp[,3:8], MARGIN = 2, FUN = complete)
+tmp[, 2:7] <- apply(tmp[, 2:7], MARGIN = 2, FUN = complete)
 
 # merge with master
 master <- merge(master, tmp, by = "pseudonym", all = T)
@@ -425,7 +422,7 @@ if (file.exists(master_cp)) {
   master$show <- ""
   master$consent_chased <- ifelse(is.na(master$ppt_name_signed) == T, FALSE, NA)
   master$booking_chased <- ifelse(is.na(master$ppt_name) == T, FALSE, NA)
-  master$pretest_chased <- ifelse(master$complete_psytoolkit == F, FALSE, NA)
+  master$pretest_chased <- ""
   master$received_vids <- ""
   master$received_transcript <- ""
   master$reviewed_vids <- ""
@@ -442,7 +439,7 @@ if (file.exists(master_cp)) {
 
 # re-order columns
 master <- master[, c("pseudonym", "start_lobby", "ppt_name_signed", "ppt_name", "ppt_email", "ppt_phone", "start_simulator", "coach", "lobby", 
-                     "complete_psytoolkit", "consent_chased", "booking_chased", "pretest_chased", 
+                     "consent_chased", "booking_chased", "pretest_chased", 
                      "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback", 
                      "show", "sim_writing",
                      "received_vids", "received_transcript", "edited_vids",  "reviewed_vids", "reviewed_transcript", "coded_vids", 
@@ -458,7 +455,7 @@ master <- unique(master)
 master %>% group_by(pseudonym) %>% summarise(n = n()) %>% subset(n > 1)
 
 master <- master[, c("start_lobby", "pseudonym", "ppt_name_signed", "ppt_name", "ppt_email", "ppt_phone", "start_simulator", "coach", "lobby", 
-                     "complete_psytoolkit", "consent_chased", "booking_chased", "pretest_chased", 
+                     "consent_chased", "booking_chased", "pretest_chased", 
                      "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback", 
                      "show", "sim_writing",
                      "received_vids", "received_transcript", "edited_vids",  "reviewed_vids", "reviewed_transcript", "coded_vids", 
@@ -476,7 +473,6 @@ dict$explanation <- c(
                       "Scheduled start time of simulator session in format YYYY/MM/DD hh:mm",
                       "Assigned staff for coaching",
                       "Assigned staff for lobby",
-                      "Data validation: is pretest complete",
                       "Data validation: has incomplete data been chased; NA if consent complete",
                       "Data validation: has incomplete data been chased; NA if booking complete",
                       "Data validation: has incomplete data been chased; NA if pretest complete",
