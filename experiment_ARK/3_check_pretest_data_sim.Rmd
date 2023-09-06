@@ -1,11 +1,11 @@
 ---
-title: "FO Simulator - SIMULATOR STUDY: preliminary data checks and outlier identification"
+title: "SIMULATOR STUDY: preliminary data checks and outlier identification"
 author: "Stefanie Meliss"
 date: "`r Sys.Date()`"
 output: html_document
 ---
 
-## Final exclusions sim study  (as of September 4th 2023)
+## Final exclusions sim study  (as of September 6th 2023)
 
 For the analysis below, (incomplete) data from 30 participants was removed due to missing simulator data.  
   
@@ -43,7 +43,7 @@ df <- xlsx::read.xlsx(file, sheetName = "SCALES")
 
 
 # remove ppt
-file  <- "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Analysis/Final_exclusions_Ark_ITTs_4Sept.xlsx"
+file  <- "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Analysis/Final_exclusions_Ark_ITTs_6Sept.xlsx"
 tmp <- xlsx::read.xlsx(file = file, sheetIndex = 1)
 to_remove <- tmp$pseudonym
 
