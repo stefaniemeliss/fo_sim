@@ -1,24 +1,10 @@
 # function to compute accuracy
-process_psytoolkit <- function(dir_in = "gui",# options: "gui" / file name
-                               dir_out = "gui", # options: "gui" / file name
+process_psytoolkit <- function(dir_in,# input folder directory
+                               dir_out, # output folder directory
                                zipped = "data.zip" # name of zipped folder downloaded from psytoolkit
 ){
   
   #### upzip folder ####
-  
-  # select input folder from GUI input
-  if (tolower(dir_in) == "gui") {
-    # open gui selector
-    dir_in <- choose.dir(caption = "Select directory containing downloaded data (e.g., Downloads)") 
-    dir_in <- gsub("\\", "/", dir_in, fixed = TRUE)
-  }
-  
-  # select output folder from GUI input
-  if (tolower(dir_out) == "gui") {
-    # open gui selector
-    dir_out <- choose.dir(caption = "Select directory to save processed data (e.g., Project Folder)") 
-    dir_out <- gsub("\\", "/", dir_out, fixed = TRUE)
-  }
   
   # choose data.zip folder 
   data_zip <- file.path(dir_in, zipped)
