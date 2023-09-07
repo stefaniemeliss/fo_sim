@@ -87,11 +87,10 @@ scales <- c(scales, "rate_accuracy")
 outlier_iqr <- df[, c("pseudonym", scales)]
 outlier_sd <- df[, c("pseudonym", scales)]
 
-# count number of outliers
 outlier_iqr[, paste0(scales, "_outlier")] <- apply(df[scales], MARGIN = 2, is_outlier_iqr)
 outlier_sd[, paste0(scales, "_outlier")] <- apply(df[scales], MARGIN = 2, is_outlier_sd) 
 
-# combine to one table
+# combine count of outliers to one table
 tmp <- rbind(
   colSums(outlier_iqr[, grepl("outlier", names(outlier_iqr))], na.rm = T), #IQR
   colSums(outlier_sd[, grepl("outlier", names(outlier_sd))], na.rm = T) # SD
