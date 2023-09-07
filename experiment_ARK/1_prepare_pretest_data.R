@@ -182,6 +182,7 @@ df$school_ark <- ifelse(df$school_ark_1 == 1, "Ark",
 # --- compute scales ---
 
 # 1. FEEDBACK ORIENTATION SCALE
+
 df$fo <- rowSums(df[, grepl("fos_", names(df))]) # sum score all items
 df$fo_utility <- rowSums(df[, grepl("fos_", names(df))][1:5]) # sum score item 1:5
 df$fo_accountability <- rowSums(df[, grepl("fos_", names(df))][6:10]) # sum score item 1:5
@@ -197,6 +198,7 @@ df[items] <- apply(df[items], MARGIN = 2, function(x) 6 - x ) # recoding is done
 df$conscientiousness <- rowSums(df[, grepl("bfi_conscientiousness_", names(df))]) # sum score all items after re-coding
 
 # 3. ACHIEVEMENT GOAL QUESTIONNAIRE
+
 df$m_app <- df$agq_1 + df$agq_7 + df$agq_3
 df$m_av <- df$agq_5 + df$agq_11 + df$agq_9
 df$p_app <- df$agq_4 + df$agq_2 + df$agq_8
@@ -220,7 +222,7 @@ df[, "nback_1"] <- ifelse(df[, "nback_1"] == "", NA, file.path(dir, "psytoolkit"
 # process nback data
 tmp <- apply(df[grep("nback_1", names(df))], MARGIN = 1, compute_accuracy) # function defined in separate file
 tmp <- do.call(rbind, tmp) # convert list of dataframes to dataframe
-tmp <- na.omit(tmp) # remove all rows with NAs
+tmp <- subset(tmp, !is.na(nback_1)) # remove all rows with NAs
 
 # add to df
 df <- merge(df, tmp, by = "nback_1", all.x = T)
