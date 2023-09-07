@@ -1,0 +1,142 @@
+---
+title: "SIMULATOR STUDY: preliminary analysis"
+author: "Stefanie Meliss"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+For the analysis below, exclusion criteria for participants in the simulator study were applied.  
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# libraries
+library(kableExtra)
+library(dplyr)
+library(GGally)
+
+# empty work space
+rm(list = ls())
+
+# get directories
+dir <- getwd()
+
+# process data: assumes this has been run
+source("C:/Users/stefanie.meliss/OneDrive - Ambition Institute/code/colour_palette.R")
+# source(file.path(dir_root, "1_prepare_pretest_data.R"))
+
+# function to determine outliers
+is_outlier_iqr <- function(x) {
+  return(x < quantile(x, 0.25, na.rm = T) - 1.5 * IQR(x, na.rm = T) | x > quantile(x, 0.75, na.rm = T) + 1.5 * IQR(x, na.rm = T))
+}
+
+is_outlier_sd <- function(x) {
+  return(x < mean(x, na.rm = T) - 3 * sd(x, na.rm = T) | x > mean(x, na.rm = T) + 3 * sd(x, na.rm = T))
+}
+
+# read in data
+file = file.path(dir, "pretest_ARK.xlsx")
+df <- xlsx::read.xlsx(file, sheetName = "SCALES")
+
+# remove ppt
+file  <- "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Analysis/Final_exclusions_Ark_ITTs_6Sept.xlsx"
+tmp <- xlsx::read.xlsx(file = file, sheetIndex = 1)
+to_remove <- tmp$pseudonym
+
+df <- df %>% filter(!pseudonym %in% to_remove)
+
+
+```
+
+
+### Questionnaire data
+
+The sum score for each scale was computed following instructions given by the scale author(s). We have the same number of observations for each scale.
+
+```{r scales, echo = F, results='asis'}
+scales <- names(df)[grep("fo|conscient|m_a|p_a|task_|pref", names(df))]
+
+# compute descriptives for fo subscales
+tmp <- psych::describe(df[, scales])
+# round values
+tmp <- round(tmp, 2)
+# add scale name
+tmp$vars <- row.names(tmp)
+
+# print to markdown
+kbl(tmp, caption = "Scale descriptives", row.names = F) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+To better understand how the data is distributed and whether scales correlate with each other, a scatterplot matrix with embedded histrograms is produced. The results suggests that FO does not correlate with any neighbouring constructs.  
+
+
+```{r, echo=FALSE, results='asis', fig.align='center', fig.height=12, fig.width=12, message=F, warning=F}
+# save data for matrix in seperate df
+desc <- df[, c("pseudonym", scales)]
+
+# define plotting function for lower diagonal
+lowerfun <- function(data,mapping){
+  ggplot(data = data, mapping = mapping)+
+    geom_point(position=position_jitter(height=0.01, width=0.01), col = navy) 
+  # +
+  # coord_cartesian(ylim = c(-2,2), xlim = c(-2,2))
+  
+} 
+
+# define plotting function for upper diagonale
+diagfun <- function(data,mapping){
+  
+  ggplot(data = data, mapping = mapping)+
+    geom_histogram(stat = "count", binwidth = 1, fill = coral) 
+  # + 
+  #   coord_cartesian(ylim = c(0,100), xlim = c(-2,2))
+} 
+
+# create plot
+plt <- ggpairs(desc[, -1], lower = list(continuous = wrap(lowerfun)), diag = list(continuous =  wrap(diagfun))) + theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), strip.text.y.right = element_text(angle = 360), strip.text.x.top = element_text(angle = 90))
+
+
+
+# plotly::ggplotly(plt)
+# print plot
+print(suppressWarnings(plt))
+
+```
+
+### n-back data
+
+To process n-back data, trial-level data was used (after removing practice trails). For each participant, event counts (n-back trial vs. non n-back trial) and performance according to signal detection theory (i.e., hits, misses, false alarms) were extracted. Additionally, rates for each event/performance type were computed. Accuracy rate is computed as hit rate - false alarm rate.
+
+```{r nback, echo = F, results='asis'}
+nback <- names(df)[grep("total_|rate_", names(df))]
+
+# compute descriptives for fo subscales
+tmp <- psych::describe(df[, nback])
+# round values
+tmp <- round(tmp, 2)
+# add scale name
+tmp$vars <- row.names(tmp)
+
+# print to markdown
+kbl(tmp, caption = "n-back descriptives", row.names = F) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+
+```{r, echo=FALSE, results='asis', fig.align='center', fig.height=12, fig.width=12, message=F, warning=F}
+
+# remove outlier
+desc <- df[, c("pseudonym", nback)]
+
+# redo scatterplot matrix
+# create plot
+plt <- ggpairs(desc[, -1], lower = list(continuous = wrap(lowerfun)), diag = list(continuous =  wrap(diagfun))) + theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), strip.text.y.right = element_text(angle = 360), strip.text.x.top = element_text(angle = 90))
+
+print(suppressWarnings(plt))
+
+```
