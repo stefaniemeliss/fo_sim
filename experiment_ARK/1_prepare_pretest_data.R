@@ -23,8 +23,9 @@ data_collection <- "experiment_ARK"
 dir <- file.path(dir_root, data_collection)
 
 # read in files
-source(file.path(dir_root, "compute_accuracy.R"))
 source(file.path(dir_root, "passwords.R"))
+devtools::source_url("https://github.com/stefaniemeliss/fo_sim/blob/master/helper_functions.R?raw=TRUE")
+devtools::source_url("https://github.com/stefaniemeliss/fo_sim/blob/master/compute_accuracy.R?raw=TRUE")
 options(xlsx.datetime.format="YYYY/mm/dd hh:mm")
 library(dplyr)
 
@@ -382,10 +383,8 @@ master <- merge(master, slots, by = "start_lobby", all.x = T)
 # complete data checks
 tmp <- data[, c("pseudonym", "school_ark", "fo", "conscientiousness", "m_app", "task_pleasure", "rate_accuracy")]
 names(tmp) <-  c("pseudonym", "complete_demogs", "complete_fo", "complete_bfi", "complete_agq", "complete_dammq", "complete_nback")
-complete <- function(x) {
-  return(ifelse(is.na(x), F, T))
-}
-tmp[, 2:7] <- apply(tmp[, 2:7], MARGIN = 2, FUN = complete)
+
+tmp[, 2:7] <- apply(tmp[, 2:7], MARGIN = 2, FUN = is_completed)
 
 # merge with master
 master <- merge(master, tmp, by = "pseudonym", all = T)

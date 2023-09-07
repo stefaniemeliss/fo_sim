@@ -26,13 +26,7 @@ source("C:/Users/stefanie.meliss/OneDrive - Ambition Institute/code/colour_palet
 # source(file.path(dir_root, "1_prepare_pretest_data.R"))
 
 # function to determine outliers
-is_outlier_iqr <- function(x) {
-  return(x < quantile(x, 0.25, na.rm = T) - 1.5 * IQR(x, na.rm = T) | x > quantile(x, 0.75, na.rm = T) + 1.5 * IQR(x, na.rm = T))
-}
-
-is_outlier_sd <- function(x) {
-  return(x < mean(x, na.rm = T) - 3 * sd(x, na.rm = T) | x > mean(x, na.rm = T) + 3 * sd(x, na.rm = T))
-}
+devtools::source_url("https://github.com/stefaniemeliss/fo_sim/blob/master/helper_functions.R?raw=TRUE")
 
 # read in data
 file = file.path(dir, "pretest_ARK.xlsx")
