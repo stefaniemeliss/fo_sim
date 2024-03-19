@@ -62,6 +62,9 @@ compute_accuracy <- function(file_nback){
     # 5. compute accuracy and return
     out$rate_accuracy <- out$rate_hits - out$rate_fa
     
+    # 6. compute average reaction time for correct trials
+    out$avg_rt_hits <- mean(data$V8[data$V5 == 1])
+    
     
     # return data
     return(out)
@@ -71,5 +74,5 @@ compute_accuracy <- function(file_nback){
 
 
 # test
-# file_nback <- file.path(dir, "psytoolkit", "experiment_data", "NBack_task_nonfinal.2023-08-09-1030.data.b2dbc2e6-81c3-4205-9aa1-2f153f423dc9.txt")
+# file_nback <- file.path(in_dir, "tmp", "experiment_data", "NBack_task_nonfinal.2023-09-14-1323.data.5614258c-212a-4cdd-8ee5-65be32c7f74d.txt")
 # compute_accuracy(file_nback = file_nback)
