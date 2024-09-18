@@ -1,0 +1,303 @@
+---
+title: "FO psychometric analyses"
+author: "Stefanie Meliss"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list=ls())
+
+# --- load functions from github ---
+
+devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
+
+library(tidyr)
+library(dplyr)
+
+# --- read in data ---
+
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
+
+setwd(dir)
+
+df <- read.csv("All_data_FO.csv")
+item <- read.csv("Factor_analysis_data_FO.csv")
+
+```
+
+
+
+### Psychometric properties of the FO scales
+
+```{r, echo = F}
+# --- psychometric analysis --- #
+
+# get cronbach's alpha for survey 1 #
+fo1 <- item[, c(grep("participant|fos_", names(item)))]
+psych::alpha(fo1[-1], title = "Survey 1")
+
+# get cronbach's alpha survey 2 #
+fo2 <- item[, c(grep("participant|fos2_", names(item)))]
+psych::alpha(fo2[-1], title = "Survey 2")
+
+# get data on test-retest reliability #
+
+# only use complete data
+complete_obs <- fo2$participant[!is.na(fo2$fos2_1)]
+fo <- item[, c(grep("participant|fos", names(item)))]
+fo <- subset(fo, participant %in% complete_obs)
+
+# convert wide into long (one row per item)
+long_df <- fo %>%
+  pivot_longer(
+    cols = starts_with("fos"), 
+    names_to = "item", 
+    values_to = "score"
+  )
+
+# separate item into two columns (item number and survey)
+long_df <- long_df %>%
+  mutate(survey = ifelse(grepl("^fos2_", item), "fos2", "fos")) %>%
+  mutate(item = gsub("fos2_", "", item)) %>%
+  mutate(item = gsub("fos_", "", item)) %>%
+  arrange(participant, survey, item)
+
+# pivot the data back to a wider format with separate rows for fos and fos2 and a column for each item number
+long_df <- long_df %>%
+  pivot_wider(
+    names_from = item,
+    values_from = score
+  ) %>%
+  arrange(participant, survey) %>%
+  as.data.frame()
+
+# determine test-retest reliability
+cat("FO total")
+psych::testRetest(t1 = long_df,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+tmp <- psych::testRetest(t1 = long_df,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+
+cat("FO utility")
+tmp <- long_df[, c("participant", "survey", paste(1:5))]
+psych::testRetest(t1 = tmp,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+cat("FO accountability")
+tmp <- long_df[, c("participant", "survey", paste(6:10))]
+psych::testRetest(t1 = tmp,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+cat("FO awareness")
+tmp <- long_df[, c("participant", "survey", paste(11:15))]
+psych::testRetest(t1 = tmp,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+cat("FO self-efficacy")
+tmp <- long_df[, c("participant", "survey", paste(16:20))]
+psych::testRetest(t1 = tmp,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+# standard error of measurement #
+tmp <- psych::alpha(fo1[-1], title = "Survey 1")
+
+SEM = tmp$total$sd * sqrt((1 - tmp$total$raw_alpha))
+
+1.96 * SEM * sqrt(2)
+
+compute_critical_difference <- function(sd, reliability, confidence_level = 0.95) {
+  # Calculate the standard error of measurement (SEM)
+  sem <- sd * sqrt(1 - reliability)
+  
+  # Determine the z-score for the given confidence level
+  z <- qnorm((1 + confidence_level) / 2)
+  
+  # Compute the critical difference
+  critical_difference <- z * sem * sqrt(2)
+  
+  return(critical_difference)
+}
+
+# Example usage
+sd <- 10  # Standard deviation of test scores
+reliability <- 0.85  # Reliability coefficient
+confidence_level <- 0.95  # Confidence level (default is 95%)
+
+critical_difference <- compute_critical_difference(sd, reliability, confidence_level)
+print(critical_difference)
+
+# Example usage
+sd <- tmp$total$sd  # Standard deviation of test scores
+reliability <- tmp$total$raw_alpha  # Reliability coefficient
+confidence_level <- 0.95  # Confidence level (default is 95%)
+
+critical_difference <- compute_critical_difference(sd, reliability, confidence_level)
+print(critical_difference)
+
+```
+
+
+
+### Psychometric properties of the AGQ scales
+
+```{r, echo = F}
+# --- psychometric analysis --- #
+
+# ACHIEVEMENT GOAL QUESTIONNAIRE
+# df$m_app <- df$agq_1 + df$agq_7 + df$agq_3
+# df$m_av <- df$agq_5 + df$agq_11 + df$agq_9
+# df$p_app <- df$agq_4 + df$agq_2 + df$agq_8
+# df$p_av <- df$agq_12 + df$agq_10 + df$agq_6
+
+# get cronbach's alpha for survey 1 #
+psych::alpha(item[, c("agq_1", "agq_3", "agq_7")],
+             title = "Survey 1 Mastery approach")
+psych::alpha(item[, c("agq_5", "agq_11", "agq_9")],
+             title = "Survey 1 Mastery avoid")
+psych::alpha(item[, c("agq_4", "agq_2", "agq_8")],
+             title = "Survey 1 Performance approach")
+psych::alpha(item[, c("agq_12", "agq_10", "agq_6")],
+             title = "Survey 1 Performance avoid")
+
+# get cronbach's alpha for survey 2 #
+psych::alpha(item[, c("agq2_1", "agq2_3", "agq2_7")],
+             title = "Survey 2 Mastery approach")
+psych::alpha(item[, c("agq2_5", "agq2_11", "agq2_9")],
+             title = "Survey 2 Mastery avoid")
+psych::alpha(item[, c("agq2_4", "agq2_2", "agq2_8")],
+             title = "Survey 2 Performance approach")
+psych::alpha(item[, c("agq2_12", "agq2_10", "agq2_6")],
+             title = "Survey 2 Performance avoid")
+
+# get data on test-retest reliability #
+
+# only use complete data
+agq <- item[, c(grep("participant|agq", names(item)))]
+agq <- subset(agq, participant %in% complete_obs)
+
+# convert wide into long (one row per item)
+long_df <- agq %>%
+  pivot_longer(
+    cols = starts_with("agq"), 
+    names_to = "item", 
+    values_to = "score"
+  )
+
+# separate item into two columns (item number and survey)
+long_df <- long_df %>%
+  mutate(survey = ifelse(grepl("^agq2_", item), "agq2", "agq")) %>%
+  mutate(item = gsub("agq2_", "", item)) %>%
+  mutate(item = gsub("agq_", "", item)) %>%
+  arrange(participant, survey, item)
+
+# pivot the data back to a wider format with separate rows for fos and fos2 and a column for each item number
+long_df <- long_df %>%
+  pivot_wider(
+    names_from = item,
+    values_from = score
+  ) %>%
+  arrange(participant, survey) %>%
+  as.data.frame()
+
+# determine test-retest reliability
+cat("Mastery approach")
+tmp <- long_df[, c("participant", "survey", "1", "7", "3")]
+psych::testRetest(t1 = tmp,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+cat("Mastery avoid")
+tmp <- long_df[, c("participant", "survey", "5", "11", "9")]
+psych::testRetest(t1 = tmp,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+cat("Performance approach")
+tmp <- long_df[, c("participant", "survey", "4", "2", "8")]
+psych::testRetest(t1 = tmp,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+cat("Performance avoid")
+tmp <- long_df[, c("participant", "survey", "12", "10", "6")]
+psych::testRetest(t1 = tmp,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+
+```
+
+### Psychometric properties of the DAMMQ scales
+
+```{r, echo = F}
+# --- psychometric analysis --- #
+
+# get cronbach's alpha for survey 1 #
+dammq1 <- item[, c(grep("participant|dammq_", names(item)))]
+psych::alpha(dammq1[-1], title = "Survey 1")
+
+# get cronbach's alpha survey 2 #
+dammq2 <- item[, c(grep("participant|dammq2_", names(item)))]
+psych::alpha(dammq2[-1], title = "Survey 2")
+
+# get data on test-retest reliability #
+
+# only use complete data
+dammq <- item[, c(grep("participant|dammq", names(item)))]
+dammq <- subset(dammq, participant %in% complete_obs)
+
+# convert wide into long (one row per item)
+long_df <- dammq %>%
+  pivot_longer(
+    cols = starts_with("dammq"), 
+    names_to = "item", 
+    values_to = "score"
+  )
+
+# separate item into two columns (item number and survey)
+long_df <- long_df %>%
+  mutate(survey = ifelse(grepl("^dammq2_", item), "dammq2", "dammq")) %>%
+  mutate(item = gsub("dammq2_", "", item)) %>%
+  mutate(item = gsub("dammq_", "", item)) %>%
+  arrange(participant, survey, item)
+
+# pivot the data back to a wider format with separate rows for fos and fos2 and a column for each item number
+long_df <- long_df %>%
+  pivot_wider(
+    names_from = item,
+    values_from = score
+  ) %>%
+  arrange(participant, survey) %>%
+  as.data.frame()
+
+# determine test-retest reliability
+psych::testRetest(t1 = long_df,
+                  time = "survey",
+                  id = "participant",
+                  lmer = F)
+
+```
+
+
+
