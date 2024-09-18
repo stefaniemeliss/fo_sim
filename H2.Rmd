@@ -1,0 +1,304 @@
+---
+title: "FO - Hypothesis 2"
+author: "Stefanie Meliss"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list=ls())
+
+# --- load functions from github ---
+
+devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
+
+library(tidyr)
+library(dplyr)
+library(kableExtra)
+
+# --- read in data ---
+
+cd = getwd()
+
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
+
+setwd(dir)
+
+df <- read.csv("All_data_FO.csv")
+
+df <- filter(df, Exclusion_H2 == 0)
+
+
+```
+
+### Pairwise t-tests one-sided
+
+```{r, echo = F, results='asis'}
+
+# create DF for export
+out <- data.frame(
+  variable = character(5),
+  survey1 = character(5),
+  survey2 = character(5),
+  diff = character(5),
+  ttest = character(5)
+)
+
+vars <- c("FO",
+          "FO utility",
+          "FO accountability",
+          "FO social awareness",
+          "FO self-efficacy")
+
+# determine variable names: summed scores
+vars_1 <- c("FO",
+            "FO_utility",
+            "FO_accountability",
+            "FO_awareness",
+            "FO_efficacy")
+
+vars_2 <- c("FO.2",
+            "FO_utility.2",
+            "FO_accountability.2",
+            "FO_awareness.2",
+            "FO_efficacy.2")
+
+# loop over vraibles #
+
+for (i in 1:length(vars)) {
+  
+  v1 <- vars_1[i]
+  v2 <- vars_2[i]
+  
+  # run paired t-test
+  ttest <- t.test(y = df[, v1],
+                  x = df[, v2],
+                  paired = T,
+                  alternative = "greater")
+  
+  # get survey 1 descriptives
+  survey1 <- round(psych::describe(df[, v1]), 2)
+  # get survey 2 descriptives
+  survey2 <- round(psych::describe(df[, v2]), 2)
+  # get diff descriptives
+  df$diff <- df[, v2] - df[, v1]
+  diff <- round(psych::describe(df[, "diff"]), 2)
+  hist(df$diff, main = paste0(vars[i]))
+  
+  # fill table #
+  out[i, "variable"] <- vars[i]
+  out[i, "survey1"] <- paste0(survey1$mean, " (", survey1$sd, ") [", survey1$min, "; ", survey1$max, "]")
+  out[i, "survey2"] <- paste0(survey2$mean, " (", survey2$sd, ") [", survey2$min, "; ", survey2$max, "]")
+  out[i, "diff"] <- paste0(diff$mean, " (", diff$sd, ") [", diff$min, "; ", diff$max, "]")
+  out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df[, v1], x = df[, v2], method = "paired"), 2))
+  
+}
+
+summed <- out
+
+kbl(summed, caption = "Summed scores") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+
+# create DF for export
+out <- data.frame(
+  variable = character(5),
+  survey1 = character(5),
+  survey2 = character(5),
+  diff = character(5),
+  ttest = character(5)
+)
+
+# determine variable names: weighted scores
+vars_1 <- c("FO_wtd",
+            "FO_utility_wtd",
+            "FO_account_wtd",
+            "FO_aware_wtd",
+            "FO_efficacy_wtd")
+
+vars_2 <- c("FO2_wtd",
+            "FO2_utility_wtd",
+            "FO2_account_wtd",
+            "FO2_aware_wtd",
+            "FO2_efficacy_wtd")
+
+# loop over vraibles #
+
+for (i in 1:length(vars)) {
+  
+  v1 <- vars_1[i]
+  v2 <- vars_2[i]
+  
+  # run paired t-test
+  ttest <- t.test(y = df[, v1],
+                  x = df[, v2],
+                  paired = T,
+                  alternative = "greater")
+  
+  # get survey 1 descriptives
+  survey1 <- round(psych::describe(df[, v1]), 2)
+  # get survey 2 descriptives
+  survey2 <- round(psych::describe(df[, v2]), 2)
+  # get diff descriptives
+  df$diff <- df[, v2] - df[, v1]
+  diff <- round(psych::describe(df[, "diff"]), 2)
+  hist(df$diff, main = paste0(vars[i]))
+  
+  # fill table #
+  out[i, "variable"] <- vars[i]
+  out[i, "survey1"] <- paste0(survey1$mean, " (", survey1$sd, ") [", survey1$min, "; ", survey1$max, "]")
+  out[i, "survey2"] <- paste0(survey2$mean, " (", survey2$sd, ") [", survey2$min, "; ", survey2$max, "]")
+  out[i, "diff"] <- paste0(diff$mean, " (", diff$sd, ") [", diff$min, "; ", diff$max, "]")
+  out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df[, v1], x = df[, v2], method = "paired"), 2))
+  
+}
+
+weighted <- out
+
+kbl(weighted, caption = "Weighted scores") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+
+# combine both
+out <- merge(summed, weighted, by = "variable")
+
+write.csv(out, file = file.path(cd, "H2_onesided.csv"), row.names = F)
+
+```
+
+
+
+
+### Pairwise t-tests two-sided
+
+```{r, echo = F, results='asis'}
+
+# create DF for export
+out <- data.frame(
+  variable = character(5),
+  survey1 = character(5),
+  survey2 = character(5),
+  diff = character(5),
+  ttest = character(5)
+)
+
+vars <- c("FO",
+          "FO utility",
+          "FO accountability",
+          "FO social awareness",
+          "FO self-efficacy")
+
+# determine variable names: summed scores
+vars_1 <- c("FO",
+            "FO_utility",
+            "FO_accountability",
+            "FO_awareness",
+            "FO_efficacy")
+
+vars_2 <- c("FO.2",
+            "FO_utility.2",
+            "FO_accountability.2",
+            "FO_awareness.2",
+            "FO_efficacy.2")
+
+# loop over vraibles #
+
+for (i in 1:length(vars)) {
+  
+  v1 <- vars_1[i]
+  v2 <- vars_2[i]
+  
+  # run paired t-test
+  ttest <- t.test(y = df[, v1],
+                  x = df[, v2],
+                  paired = T)
+  
+  # get survey 1 descriptives
+  survey1 <- round(psych::describe(df[, v1]), 2)
+  # get survey 2 descriptives
+  survey2 <- round(psych::describe(df[, v2]), 2)
+  # get diff descriptives
+  df$diff <- df[, v2] - df[, v1]
+  diff <- round(psych::describe(df[, "diff"]), 2)
+  
+  # fill table #
+  out[i, "variable"] <- vars[i]
+  out[i, "survey1"] <- paste0(survey1$mean, " (", survey1$sd, ") [", survey1$min, "; ", survey1$max, "]")
+  out[i, "survey2"] <- paste0(survey2$mean, " (", survey2$sd, ") [", survey2$min, "; ", survey2$max, "]")
+  out[i, "diff"] <- paste0(diff$mean, " (", diff$sd, ") [", diff$min, "; ", diff$max, "]")
+  out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df[, v1], x = df[, v2], method = "paired"), 2))
+  
+}
+
+summed <- out
+
+kbl(summed, caption = "Summed scores") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+
+# create DF for export
+out <- data.frame(
+  variable = character(5),
+  survey1 = character(5),
+  survey2 = character(5),
+  diff = character(5),
+  ttest = character(5)
+)
+
+# determine variable names: weighted scores
+vars_1 <- c("FO_wtd",
+            "FO_utility_wtd",
+            "FO_account_wtd",
+            "FO_aware_wtd",
+            "FO_efficacy_wtd")
+
+vars_2 <- c("FO2_wtd",
+            "FO2_utility_wtd",
+            "FO2_account_wtd",
+            "FO2_aware_wtd",
+            "FO2_efficacy_wtd")
+
+# loop over vraibles #
+
+for (i in 1:length(vars)) {
+  
+  v1 <- vars_1[i]
+  v2 <- vars_2[i]
+  
+  # run paired t-test
+  ttest <- t.test(y = df[, v1],
+                  x = df[, v2],
+                  paired = T)
+  
+  # get survey 1 descriptives
+  survey1 <- round(psych::describe(df[, v1]), 2)
+  # get survey 2 descriptives
+  survey2 <- round(psych::describe(df[, v2]), 2)
+  # get diff descriptives
+  df$diff <- df[, v2] - df[, v1]
+  diff <- round(psych::describe(df[, "diff"]), 2)
+  
+  # fill table #
+  out[i, "variable"] <- vars[i]
+  out[i, "survey1"] <- paste0(survey1$mean, " (", survey1$sd, ") [", survey1$min, "; ", survey1$max, "]")
+  out[i, "survey2"] <- paste0(survey2$mean, " (", survey2$sd, ") [", survey2$min, "; ", survey2$max, "]")
+  out[i, "diff"] <- paste0(diff$mean, " (", diff$sd, ") [", diff$min, "; ", diff$max, "]")
+  out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df[, v1], x = df[, v2], method = "paired"), 2))
+  
+}
+
+weighted <- out
+
+kbl(weighted, caption = "Weighted scores") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+
+# combine both
+out <- merge(summed, weighted, by = "variable")
+
+write.csv(out, file = file.path(cd, "H2_twosided.csv"), row.names = F)
+
+```
+
