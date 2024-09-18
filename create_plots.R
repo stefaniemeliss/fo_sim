@@ -153,10 +153,16 @@ dfl_fo_aw$comp <- "Weighted score"
 # plt <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
 #   stat_summary(fun = "mean", geom = "line") +
 #   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-#   stat_summary(fun = "mean", geom = "point", size = 3, color = coral) +
+#   stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
 #   ambition_theme + xlab("Survey") + ylab("Self-report measure") +
 #   facet_grid(construct ~ comp, scales = "free_y")
 # plt
+
+# --- set some overall parameter --- #
+
+size_dot = 2
+ymin = 17
+ymax = 29
 
 # --- create facets for FO only ---
 
@@ -166,7 +172,7 @@ dfl$construct <- factor(dfl$construct, levels = c("FO", "FO self-efficacy"))
 plt_fo <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   stat_summary(fun = "mean", geom = "line") +
   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point", size = 3, color = coral) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
   ambition_theme + xlab("") + ylab("FO") +
   facet_grid(. ~ comp) + coord_cartesian(ylim = c(70, 90))
 plt_fo
@@ -179,9 +185,9 @@ dfl$construct <- factor(dfl$construct, levels = c("FO", "FO self-efficacy"))
 plt_fo_e <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   stat_summary(fun = "mean", geom = "line") +
   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point", size = 3, color = coral) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
   ambition_theme + xlab("Survey") + ylab("FO self-efficacy") +
-  facet_grid(. ~ comp) + coord_cartesian(ylim = c(17, 29))
+  facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
 plt_fo_e
 
 
@@ -190,7 +196,7 @@ plt_fo_e
 ggpubr::ggarrange(
   plt_fo, plt_fo_e, nrow = 2, align = "hv")
 ggsave(filename = file.path(cd, "Figure2.jpg"), 
-       units = "cm", width = 14, height = 10)
+       units = "cm", width = 16, height = 12)
 
 
 # --- create facets for FO accountability only ---
@@ -201,9 +207,9 @@ dfl$construct <- factor(dfl$construct, levels = c("FO", "FO accountability"))
 plt_fo_a <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   stat_summary(fun = "mean", geom = "line") +
   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point", size = 3, color = coral) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
   ambition_theme + xlab("") + ylab("FO accountability") +
-  facet_grid(. ~ comp) + coord_cartesian(ylim = c(17, 29))
+  facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
 plt_fo_a
 
 # --- create facets for FO social awareness only ---
@@ -214,9 +220,9 @@ dfl$construct <- factor(dfl$construct, levels = c("FO", "FO social awareness"))
 plt_fo_s <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   stat_summary(fun = "mean", geom = "line") +
   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point", size = 3, color = coral) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
   ambition_theme + xlab("") + ylab("FO social awareness") +
-  facet_grid(. ~ comp) + coord_cartesian(ylim = c(17, 29))
+  facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
 plt_fo_s
 
 
@@ -228,9 +234,9 @@ dfl$construct <- factor(dfl$construct, levels = c("FO", "FO utility"))
 plt_fo_u <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   stat_summary(fun = "mean", geom = "line") +
   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point", size = 3, color = coral) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
   ambition_theme + xlab("Survey") + ylab("FO utility") +
-  facet_grid(. ~ comp) + coord_cartesian(ylim = c(17, 29))
+  facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
 plt_fo_u
 
 
@@ -239,4 +245,4 @@ plt_fo_u
 ggpubr::ggarrange(
   plt_fo_a, plt_fo_s, plt_fo_u, nrow = 3, align = "hv")
 ggsave(filename = file.path(cd, "FigureS1.jpg"), 
-       units = "cm", width = 14, height = 15)
+       units = "cm", width = 16, height = 18)
