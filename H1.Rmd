@@ -1,0 +1,141 @@
+---
+title: "FO - Hypothesis 1"
+author: "Stefanie Meliss"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+options(scipen = 999)
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list=ls())
+
+# --- load functions from github ---
+
+devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
+
+library(tidyr)
+library(dplyr)
+library(kableExtra)
+
+# --- read in data ---
+
+cd = getwd()
+
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
+
+setwd(dir)
+
+# load data
+df <- read.csv(file.path(dir, "All_data_FO.csv"))
+# filter
+df <- filter(df, Exclusion_sim_analysis  == 0)
+
+
+```
+
+### H1
+
+```{r}
+# sim 2 accuracy residualised
+m1 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO),
+         data = df)
+sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+# sim 2 accuracy residualised
+m1 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO),
+         data = df)
+sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+```
+
+### H1A
+
+```{r}
+# sim 2 accuracy residualised
+m2 <- lm(scale(residuals_Sim2acc) ~ 
+           scale(sim1_accuracy) +
+           scale(FO) + 
+           scale(working_memory) + 
+           scale(conscientiousness) +
+           scale(DAMMQ_sum) +
+           scale(AGQ_mastery_approach) +
+           scale(AGQ_mastery_avoidance) +
+           scale(AGQ_perf_approach) +
+           scale(AGQ_perf_avoidance),
+         data = df
+)
+sjPlot::tab_model(m2, show.se = T, show.stat = T, show.ci = F)
+
+# sim 2 tot residualised
+m2 <- lm(scale(residuals_Sim2tot) ~ 
+           scale(sim1_ToT) +
+           scale(FO) + 
+           scale(working_memory) + 
+           scale(conscientiousness) +
+           scale(DAMMQ_sum) +
+           scale(AGQ_mastery_approach) +
+           scale(AGQ_mastery_avoidance) +
+           scale(AGQ_perf_approach) +
+           scale(AGQ_perf_avoidance),
+         data = df
+)
+sjPlot::tab_model(m2, show.se = T, show.stat = T, show.ci = F)
+
+```
+
+### H1B
+
+##### H1B - Utility
+
+```{r}
+# sim 2 accuracy residualised
+m3 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO_utility), data = df)
+sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+
+# sim 2 accuracy residualised
+m3 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO_utility), data = df)
+sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+
+```
+
+##### H1B - Accountability
+
+```{r}
+# sim 2 accuracy residualised
+m3 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO_accountability), data = df)
+sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+
+# sim 2 accuracy residualised
+m3 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO_accountability), data = df)
+sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+
+
+```
+
+##### H1B - Social awareness
+
+```{r}
+# sim 2 accuracy residualised
+m3 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO_accountability), data = df)
+sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+
+# sim 2 accuracy residualised
+m3 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO_accountability), data = df)
+sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+
+```
+
+##### H1B - Self-efficacy
+
+```{r}
+# sim 2 accuracy residualised
+m3 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO_efficacy), data = df)
+sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+
+# sim 2 tot residualised
+m3 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO_efficacy), data = df)
+sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+
+```
