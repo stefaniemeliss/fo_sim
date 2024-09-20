@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 rm(list=ls())
 
-# --- load functions from github ---
+# --- load libraries ---
 
 devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
 
@@ -25,8 +25,6 @@ cd = getwd()
 
 dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
 
-setwd(dir)
-
 # load data
 df <- read.csv(file.path(dir, "All_data_FO.csv"))
 # filter
@@ -37,40 +35,89 @@ df <- filter(df, Exclusion_sim_analysis  == 0)
 
 ### H1
 
-```{r}
-# sim 2 accuracy residualised
-m1 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO),
-         data = df)
-sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+```{r, results='asis', echo = F}
+# --- H1 --- #
 
-# sim 2 accuracy residualised
-m1 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO),
+# sim 2 accuracy residualised #
+
+# run regression
+dv = "residuals_Sim2acc"
+cov = "sim1_accuracy"
+m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(FO),
          data = df)
-sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+# sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+# get beta coefs
+tmp <- summary(m1)
+coef <- as.data.frame(tmp$coefficients)
+coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+coef[,-4] <- round(coef[, -4], 2)
+coef$Predictors <- row.names(coef)
+coef$Predictors <- ifelse(coef$Predictors == "scale(get(cov))", "Sim 1 measure",
+                          ifelse(coef$Predictors == "scale(FO)", "FO",
+                                 coef$Predictors))
+coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
+coef$`Std. Error` <- NULL
+row.names(coef) <- NULL
+coef$R2 <- ""
+coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+
+
+coef_acc <- coef
+
+# sim 2 tot residualised #
+
+# run regression
+dv = "residuals_Sim2tot"
+cov = "sim1_ToT"
+m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(FO),
+         data = df)
+# sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+# get beta coefs
+tmp <- summary(m1)
+coef <- as.data.frame(tmp$coefficients)
+coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+coef[,-4] <- round(coef[, -4], 2)
+coef$Predictors <- row.names(coef)
+coef$Predictors <- ifelse(coef$Predictors == "scale(get(cov))", "Sim 1 measure",
+                          ifelse(coef$Predictors == "scale(FO)", "FO",
+                                 coef$Predictors))
+coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
+coef$`Std. Error` <- NULL
+row.names(coef) <- NULL
+coef$R2 <- ""
+coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+
+
+coef_tot <- coef
+
+# merge #
+coef_h1 <- merge(coef_acc, coef_tot, by = "Predictors")
+coef_h1$Predictors <- factor(coef_h1$Predictors, levels = coef_acc$Predictors)
+coef_h1 <- coef_h1[order(coef_h1$Predictors), ]
+
+# add to markdown
+kbl(coef_h1, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_h1))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  add_header_above(c(" " = 1, "Participant skill" = 4, "Time off task" = 4))
 
 ```
 
 ### H1A
 
-```{r}
-# sim 2 accuracy residualised
-m2 <- lm(scale(residuals_Sim2acc) ~ 
-           scale(sim1_accuracy) +
-           scale(FO) + 
-           scale(working_memory) + 
-           scale(conscientiousness) +
-           scale(DAMMQ_sum) +
-           scale(AGQ_mastery_approach) +
-           scale(AGQ_mastery_avoidance) +
-           scale(AGQ_perf_approach) +
-           scale(AGQ_perf_avoidance),
-         data = df
-)
-sjPlot::tab_model(m2, show.se = T, show.stat = T, show.ci = F)
+```{r, results='asis', echo = F}
+# --- H1A --- #
 
-# sim 2 tot residualised
-m2 <- lm(scale(residuals_Sim2tot) ~ 
-           scale(sim1_ToT) +
+# sim 2 accuracy residualised #
+
+# run regression
+dv = "residuals_Sim2acc"
+cov = "sim1_accuracy"
+# sim 2 accuracy residualised
+m1 <- lm(scale(get(dv)) ~ 
+           scale(get(cov)) +
            scale(FO) + 
            scale(working_memory) + 
            scale(conscientiousness) +
@@ -81,61 +128,240 @@ m2 <- lm(scale(residuals_Sim2tot) ~
            scale(AGQ_perf_avoidance),
          data = df
 )
-sjPlot::tab_model(m2, show.se = T, show.stat = T, show.ci = F)
+# sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+# get beta coefs
+tmp <- summary(m1)
+coef <- as.data.frame(tmp$coefficients)
+coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+coef[,-4] <- round(coef[, -4], 2)
+coef$Predictors <- c("(Intercept)", "Sim 1 measure", "FO", "Working memory", "Conscientiousness", "Task mastery",
+                     "GO - mastery approach", "GO - mastery avoidance", "GO - performance approach", "GO - performance avoidance")
+coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
+coef$`Std. Error` <- NULL
+row.names(coef) <- NULL
+coef$R2 <- ""
+coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+
+
+coef_acc <- coef
+
+# sim 2 tot residualised #
+
+# run regression
+dv = "residuals_Sim2tot"
+cov = "sim1_ToT"
+m1 <- lm(scale(get(dv)) ~ 
+           scale(get(cov)) +
+           scale(FO) + 
+           scale(working_memory) + 
+           scale(conscientiousness) +
+           scale(DAMMQ_sum) +
+           scale(AGQ_mastery_approach) +
+           scale(AGQ_mastery_avoidance) +
+           scale(AGQ_perf_approach) +
+           scale(AGQ_perf_avoidance),
+         data = df
+)
+# sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+# get beta coefs
+tmp <- summary(m1)
+coef <- as.data.frame(tmp$coefficients)
+coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+coef[,-4] <- round(coef[, -4], 2)
+coef$Predictors <- c("(Intercept)", "Sim 1 measure", "FO", "Working memory", "Conscientiousness", "Task mastery",
+                     "GO - mastery approach", "GO - mastery avoidance", "GO - performance approach", "GO - performance avoidance")
+coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
+coef$`Std. Error` <- NULL
+row.names(coef) <- NULL
+coef$R2 <- ""
+coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+
+
+coef_tot <- coef
+
+# merge #
+coef_h1a <- merge(coef_acc, coef_tot, by = "Predictors")
+coef_h1a$Predictors <- factor(coef_h1a$Predictors, levels = coef_acc$Predictors)
+coef_h1a <- coef_h1a[order(coef_h1a$Predictors), ]
+
+# add to markdown
+kbl(coef_h1a, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_h1a))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  add_header_above(c(" " = 1, "Participant skill" = 4, "Time off task" = 4))
 
 ```
 
 ### H1B
 
-##### H1B - Utility
+```{r, results='asis', echo = F, warning=F}
+# --- H1B --- #
 
-```{r}
-# sim 2 accuracy residualised
-m3 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO_utility), data = df)
-sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+FOS <- c("FO_utility", "FO_accountability", "FO_awareness", "FO_efficacy")
+FOS_out <- c("FO utility", "FO accountability", "FO social awareness", "FO self-efficacy")
 
-# sim 2 accuracy residualised
-m3 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO_utility), data = df)
-sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+# sim 2 accuracy residualised #
+
+# run regression
+dv = "residuals_Sim2acc"
+cov = "sim1_accuracy"
+
+for (i in 1:length(FOS)) {
+  
+  # run reg
+  m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(get(FOS[i])),
+           data = df)
+  # sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F,pred.labels = c("Intercept", cov, FOS[i]))
+  
+  # get beta coefs
+  tmp <- summary(m1)
+  coef <- as.data.frame(tmp$coefficients)
+  coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+  coef[,-4] <- round(coef[, -4], 2)
+  coef$Predictors <- row.names(coef)
+  coef$Predictors[3] <- FOS_out[i]
+  row.names(coef) <- NULL
+  coef$R2 <- ""
+  coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+  
+  
+  if (i == 1) {
+    coef_acc <- coef
+  } else {
+    coef_acc <- rbind(coef_acc, coef)
+  }
+  
+}
+
+# extract data for plot #
+beta_acc <- coef_acc[grepl("FO", coef_acc$Predictors), c("Predictors", "Estimate", "Std. Error")]
+beta_acc$DV <- "Participant skill"
+
+# re-format columns
+coef_acc$Estimate <- paste0(coef_acc$Estimate, " (", coef_acc$`Std. Error`, ")")
+coef_acc$`Std. Error` <- NULL
+
+
+# sim 2 tot residualised #
+
+# run regression
+dv = "residuals_Sim2tot"
+cov = "sim1_ToT"
+for (i in 1:length(FOS)) {
+  
+  # run reg
+  m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(get(FOS[i])),
+           data = df)
+  # sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F, pred.labels = c("Intercept", cov, FOS[i]))
+  
+  # get beta coefs
+  tmp <- summary(m1)
+  coef <- as.data.frame(tmp$coefficients)
+  coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+  coef[,-4] <- round(coef[, -4], 2)
+  coef$Predictors <- row.names(coef)
+  coef$Predictors[3] <- FOS_out[i]
+  row.names(coef) <- NULL
+  coef$R2 <- ""
+  coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+  
+  
+  if (i == 1) {
+    coef_tot <- coef
+  } else {
+    coef_tot <- rbind(coef_tot, coef)
+  }
+  
+}
+
+# extract data for plot #
+beta_tot <- coef_tot[grepl("FO", coef_tot$Predictors), c("Predictors", "Estimate", "Std. Error")]
+beta_tot$DV <- "Time off task"
+
+# re-format columns
+coef_tot$Estimate <- paste0(coef_tot$Estimate, " (", coef_tot$`Std. Error`, ")")
+coef_tot$`Std. Error` <- NULL
+
+
+# merge #
+coef_h1b <- merge(coef_acc, coef_tot, by = 0)
+coef_h1b$Row.names <- as.numeric(coef_h1b$Row.names)
+coef_h1b <- coef_h1b[order(coef_h1b$Row.names),]
+coef_h1b$Row.names <- NULL
+coef_h1b$Predictors.y <- NULL
+names(coef_h1b)[names(coef_h1b) == "Predictors.x"] <- "Predictors"
+coef_h1b <- coef_h1b %>%
+  select(Predictors, everything())
+coef_h1b$Predictors <- ifelse(coef_h1b$Predictors == "scale(get(cov))", "Sim 1 measure", coef_h1b$Predictors)
+
+
+# add to markdown
+kbl(coef_h1b, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_h1b))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  add_header_above(c(" " = 1, "Participant skill" = 4, "Time off task" = 4))
+
+
+
+# create plot #
+beta <- rbind(beta_acc, beta_tot)
+beta$Predictors <- factor(beta$Predictors, levels = c("FO utility", "FO accountability", "FO social awareness", "FO self-efficacy"))
+names(beta) <- c("FO subscale", "beta", "se", "DV")
+
+
+size_dot = 2
+
+plt <- ggplot(data = beta, aes(x = `FO subscale`, y = beta)) +
+  geom_hline(yintercept = 0, color = black, linetype = "dotted") +
+  geom_errorbar(aes(ymin = beta-1.96*se, ymax = beta+1.96*se), width = .1) + 
+  geom_point(size = size_dot, color = coral) +
+  facet_grid(DV ~ .) +
+  # facet_grid(. ~ DV) +
+  ylab("β") +
+  ambition_theme
+plt
+
+ggsave(filename = file.path(cd, "Figure3.jpg"), 
+       units = "cm", width = 20, height = 12)
+
 
 ```
 
-##### H1B - Accountability
+```{r, echo=F}
+# --- create output for export ---#
 
-```{r}
-# sim 2 accuracy residualised
-m3 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO_accountability), data = df)
-sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+# create headers
+header <- coef_h1[1, ]
+header[1, 2:ncol(header)] <- ""
+header[, 1] <- "Hypothesis 1"
 
-# sim 2 accuracy residualised
-m3 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO_accountability), data = df)
-sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
+# rbind header with H1
+coef_h1 <- rbind(header, coef_h1)
 
+# create header
+header[, 1] <- "Hypothesis 1A"
 
+# rbind header with H1
+coef_h1a <- rbind(header, coef_h1a)
+
+# create header
+header[, 1] <- "Hypothesis 1B"
+
+# rbind header with H1
+coef_h1b <- rbind(header, coef_h1b)
+
+# final rbind
+coefs <- rbind(coef_h1, coef_h1a, coef_h1b)
+
+names(coefs) <- c("", "beta (SE)", "t", "p", "R2", "beta (SE)", "t", "p", "R2")
+names(coefs) <- gsub(".1", "", names(coefs))
+
+# save file
+write.csv(coefs,
+          file = file.path(cd, "H1.csv"),
+          row.names = F)
 ```
 
-##### H1B - Social awareness
 
-```{r}
-# sim 2 accuracy residualised
-m3 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO_accountability), data = df)
-sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
-
-# sim 2 accuracy residualised
-m3 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO_accountability), data = df)
-sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
-
-```
-
-##### H1B - Self-efficacy
-
-```{r}
-# sim 2 accuracy residualised
-m3 <- lm(scale(residuals_Sim2acc) ~ scale(sim1_accuracy) + scale(FO_efficacy), data = df)
-sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
-
-# sim 2 tot residualised
-m3 <- lm(scale(residuals_Sim2tot) ~ scale(sim1_ToT) + scale(FO_efficacy), data = df)
-sjPlot::tab_model(m3, show.se = T, show.stat = T, show.ci = F)
-
-```
