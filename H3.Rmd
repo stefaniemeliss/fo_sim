@@ -1,0 +1,339 @@
+---
+title: "FO - Hypothesis 3"
+author: "Stefanie Meliss"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+options(scipen = 999)
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list=ls())
+
+# --- load libraries ---
+
+devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
+
+library(tidyr)
+library(dplyr)
+library(kableExtra)
+
+# --- read in data ---
+
+cd = getwd()
+
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
+
+# load data
+df <- read.csv(file.path(dir, "All_data_FO.csv"))
+# filter
+df <- filter(df, Exclusion_GTR  == 0)
+
+
+```
+
+### H3
+
+```{r, results='asis', echo = F}
+# --- H1 --- #
+
+# Autumn term #
+
+# run regression
+dv = "GTR.dec"
+m1 <- lm(scale(get(dv)) ~ scale(FO),
+         data = df)
+# sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+# get beta coefs
+tmp <- summary(m1)
+coef <- as.data.frame(tmp$coefficients)
+coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+coef[,-4] <- round(coef[, -4], 2)
+coef$Predictors <- c("(Intercept)", "FO")
+coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
+coef$`Std. Error` <- NULL
+row.names(coef) <- NULL
+coef$R2 <- ""
+coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+
+
+coef_dec <- coef
+
+# Spring term #
+
+# run regression
+dv = "GTR.may"
+cov = "GTR.dec"
+m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(FO),
+         data = df)
+# sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+# get beta coefs
+tmp <- summary(m1)
+coef <- as.data.frame(tmp$coefficients)
+coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+coef[,-4] <- round(coef[, -4], 2)
+coef$Predictors <- c("(Intercept)", "Autumn term", "FO")
+coef$Predictors <- ifelse(coef$Predictors == "scale(get(cov))", "Sim 1 measure",
+                          ifelse(coef$Predictors == "scale(FO)", "FO",
+                                 coef$Predictors))
+coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
+coef$`Std. Error` <- NULL
+row.names(coef) <- NULL
+coef$R2 <- ""
+coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+
+
+coef_may <- coef
+
+# merge #
+coef_h3 <- merge(coef_dec, coef_may, by = "Predictors", all = T)
+coef_h3$Predictors <- factor(coef_h3$Predictors, levels = coef_may$Predictors)
+coef_h3 <- coef_h3[order(coef_h3$Predictors), ]
+
+# add to markdown
+kbl(coef_h3, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_h3))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4))
+
+```
+
+### H3A
+
+```{r, results='asis', echo = F}
+# --- H1A --- #
+
+# Autumn term #
+
+# run regression
+dv = "GTR.dec"
+# sim 2 accuracy residualised
+m1 <- lm(scale(get(dv)) ~ 
+           scale(FO) + 
+           scale(working_memory) + 
+           scale(conscientiousness) +
+           scale(DAMMQ_sum) +
+           scale(AGQ_mastery_approach) +
+           scale(AGQ_mastery_avoidance) +
+           scale(AGQ_perf_approach) +
+           scale(AGQ_perf_avoidance),
+         data = df
+)
+# sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+# get beta coefs
+tmp <- summary(m1)
+coef <- as.data.frame(tmp$coefficients)
+coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+coef[,-4] <- round(coef[, -4], 2)
+coef$Predictors <- c("(Intercept)", "FO", "Working memory", "Conscientiousness", "Task mastery",
+                     "GO - mastery approach", "GO - mastery avoidance", "GO - performance approach", "GO - performance avoidance")
+coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
+coef$`Std. Error` <- NULL
+row.names(coef) <- NULL
+coef$R2 <- ""
+coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+
+
+coef_dec <- coef
+
+# Spring term #
+
+# run regression
+dv = "GTR.may"
+cov = "GTR.dec"
+m1 <- lm(scale(get(dv)) ~ 
+           scale(get(cov)) +
+           scale(FO) + 
+           scale(working_memory) + 
+           scale(conscientiousness) +
+           scale(DAMMQ_sum) +
+           scale(AGQ_mastery_approach) +
+           scale(AGQ_mastery_avoidance) +
+           scale(AGQ_perf_approach) +
+           scale(AGQ_perf_avoidance),
+         data = df
+)
+# sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
+
+# get beta coefs
+tmp <- summary(m1)
+coef <- as.data.frame(tmp$coefficients)
+coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+coef[,-4] <- round(coef[, -4], 2)
+coef$Predictors <- c("(Intercept)", "Autumn term", "FO", "Working memory", "Conscientiousness", "Task mastery",
+                     "GO - mastery approach", "GO - mastery avoidance", "GO - performance approach", "GO - performance avoidance")
+coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
+coef$`Std. Error` <- NULL
+row.names(coef) <- NULL
+coef$R2 <- ""
+coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+
+
+coef_may <- coef
+
+# merge #
+coef_h3a <- merge(coef_dec, coef_may, by = "Predictors", all = T)
+coef_h3a$Predictors <- factor(coef_h3a$Predictors, levels = coef_may$Predictors)
+coef_h3a <- coef_h3a[order(coef_h3a$Predictors), ]
+
+# add to markdown
+kbl(coef_h3a, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_h3a))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4))
+
+```
+
+### H3B
+
+```{r, results='asis', echo = F, warning=F}
+# --- H1B --- #
+
+FOS <- c("FO_utility", "FO_accountability", "FO_awareness", "FO_efficacy")
+FOS_out <- c("FO utility", "FO accountability", "FO social awareness", "FO self-efficacy")
+
+# all in loop
+for (i in 1:length(FOS)) {
+  
+  # Autumn term #
+  dv = "GTR.dec"
+  
+  # run reg
+  m1 <- lm(scale(get(dv)) ~ scale(get(FOS[i])),
+           data = df)
+
+  # get beta coefs
+  tmp <- summary(m1)
+  coef <- as.data.frame(tmp$coefficients)
+  coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+  coef[,-4] <- round(coef[, -4], 2)
+  coef$Predictors <- c("(Intercept)", FOS_out[i])
+  row.names(coef) <- NULL
+  coef$R2 <- ""
+  coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+  
+  coef_dec <- coef
+  
+  # Spring term #
+  
+  dv = "GTR.may"
+  cov = "GTR.dec"
+  
+    # run reg
+  m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(get(FOS[i])),
+           data = df)
+
+  # get beta coefs
+  tmp <- summary(m1)
+  coef <- as.data.frame(tmp$coefficients)
+  coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+  coef[,-4] <- round(coef[, -4], 2)
+  coef$Predictors <- c("(Intercept)", "Autumn term", FOS_out[i])
+  row.names(coef) <- NULL
+  coef$R2 <- ""
+  coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+  
+  coef_may <- coef
+  
+  
+  # merge across terms #
+  coef <- merge(coef_dec, coef_may, by = "Predictors", all = T)
+
+  if (i == 1) {
+    coef_h3b <- coef
+    
+    beta_dec <- coef_dec[grepl("FO", coef_dec$Predictors), c("Predictors", "Estimate", "Std. Error")]
+    beta_may <- coef_may[grepl("FO", coef_may$Predictors), c("Predictors", "Estimate", "Std. Error")]
+
+  } else {
+    coef_h3b <- rbind(coef_h3b, coef)
+    beta_dec <- rbind(beta_dec, coef_dec[grepl("FO", coef_dec$Predictors), c("Predictors", "Estimate", "Std. Error")]) 
+    beta_may <- rbind(beta_may, coef_may[grepl("FO", coef_may$Predictors), c("Predictors", "Estimate", "Std. Error")])
+  }
+
+}
+
+# extract data for plot #
+beta_dec$DV <- "Autumn term"
+beta_may$DV <- "Spring term"
+
+# re-format columns
+coef_h3b$Estimate.x <- ifelse(!is.na(coef_h3b$Estimate.x), paste0(coef_h3b$Estimate.x, " (", coef_h3b$`Std. Error.x`, ")"), NA)
+coef_h3b$Estimate.y <- ifelse(!is.na(coef_h3b$Estimate.y), paste0(coef_h3b$Estimate.y, " (", coef_h3b$`Std. Error.y`, ")"), NA)
+coef_h3b$`Std. Error.x` <- NULL
+coef_h3b$`Std. Error.y` <- NULL
+
+
+
+# add to markdown
+kbl(coef_h3b, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_h3b))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4))
+
+
+
+# create plot #
+beta <- rbind(beta_dec, beta_may)
+beta$Predictors <- factor(beta$Predictors, levels = c("FO utility", "FO accountability", "FO social awareness", "FO self-efficacy"))
+names(beta) <- c("FO subscale", "beta", "se", "DV")
+
+
+size_dot = 2
+
+plt <- ggplot(data = beta, aes(x = `FO subscale`, y = beta)) +
+  geom_hline(yintercept = 0, color = black, linetype = "dotted") +
+  geom_errorbar(aes(ymin = beta-1.96*se, ymax = beta+1.96*se), width = .1) + 
+  geom_point(size = size_dot, color = coral) +
+  facet_grid(DV ~ .) +
+  # facet_grid(. ~ DV) +
+  ylab("β") +
+  ambition_theme
+plt
+
+ggsave(filename = file.path(cd, "Figure4.jpg"), 
+       units = "cm", width = 20, height = 12)
+
+
+```
+
+```{r, echo=F}
+# --- create output for export ---#
+
+# create headers
+header <- coef_h3[1, ]
+header[1, 2:ncol(header)] <- ""
+header[, 1] <- "Hypothesis 3"
+
+# rbind header with H1
+coef_h3 <- rbind(header, coef_h3)
+
+# create header
+header[, 1] <- "Hypothesis 3A"
+
+# rbind header with H1
+coef_h3a <- rbind(header, coef_h3a)
+
+# create header
+header[, 1] <- "Hypothesis 3B"
+
+# rbind header with H1
+coef_h3b <- rbind(header, coef_h3b)
+
+# final rbind
+coefs <- rbind(coef_h3, coef_h3a, coef_h3b)
+
+names(coefs) <- c("", "beta (SE)", "t", "p", "R2", "beta (SE)", "t", "p", "R2")
+names(coefs) <- gsub(".1", "", names(coefs))
+
+# save file
+write.csv(coefs,
+          file = file.path(cd, "H3.csv"),
+          row.names = F, na = "")
+```
+
+
