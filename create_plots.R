@@ -3,6 +3,10 @@ rm(list=ls())
 # --- load functions from github ---
 
 devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
+# library(ggplot2)
+# ambition_theme <- theme_bw()
+# coral <- "pink"
+# black40 <- "lightgray"
 
 library(dplyr)
 
@@ -12,9 +16,7 @@ cd <- getwd()
 
 dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
 
-setwd(dir)
-
-df <- read.csv("All_data_FO.csv")
+df <- read.csv(file.path(dir, "All_data_FO.csv"))
 
 # --- prepare data ---
 
@@ -177,6 +179,26 @@ plt_fo <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   facet_grid(. ~ comp) + coord_cartesian(ylim = c(70, 90))
 plt_fo
 
+plt_fo_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
+  geom_point(size = .5, color = black40) +
+  geom_line(aes(group = participant), color = black40) +
+  stat_summary(fun = "mean", geom = "line") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+  ambition_theme + xlab("") + ylab("FO") +
+  facet_grid(. ~ comp) # + coord_cartesian(ylim = c(70, 90))
+plt_fo_spag
+
+# plt_fo <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
+#   geom_point(size = .5, color = black40, position = position_jitter(.1)) +
+#   geom_line(aes(group = participant), color = black40, position = position_jitter(.1)) +
+#   stat_summary(fun = "mean", geom = "line") +
+#   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+#   stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+#   ambition_theme + xlab("") + ylab("FO") +
+#   facet_grid(. ~ comp) # + coord_cartesian(ylim = c(70, 90))
+# plt_fo
+
 # --- create facets for FO efficacy only ---
 
 dfl <- rbind(dfl_fo_e, dfl_fo_ew)
@@ -189,6 +211,16 @@ plt_fo_e <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   ambition_theme + xlab("Survey") + ylab("FO self-efficacy") +
   facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
 plt_fo_e
+
+plt_fo_e_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
+  geom_point(size = .5, color = black40) +
+  geom_line(aes(group = participant), color = black40) +
+  stat_summary(fun = "mean", geom = "line") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+  ambition_theme + xlab("Survey") + ylab("FO self-efficacy") +
+  facet_grid(. ~ comp) #+ coord_cartesian(ylim = c(ymin, ymax))
+plt_fo_e_spag
 
 
 ## --- Combine to create Figure 2 ---
@@ -212,6 +244,16 @@ plt_fo_a <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
 plt_fo_a
 
+plt_fo_a_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
+  geom_point(size = .5, color = black40) +
+  geom_line(aes(group = participant), color = black40) +
+  stat_summary(fun = "mean", geom = "line") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+  ambition_theme + xlab("") + ylab("FO accountability") +
+  facet_grid(. ~ comp) #+ coord_cartesian(ylim = c(ymin, ymax))
+plt_fo_a_spag
+
 # --- create facets for FO social awareness only ---
 
 dfl <- rbind(dfl_fo_s, dfl_fo_sw)
@@ -224,6 +266,16 @@ plt_fo_s <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   ambition_theme + xlab("") + ylab("FO social awareness") +
   facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
 plt_fo_s
+
+plt_fo_s_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
+  geom_point(size = .5, color = black40) +
+  geom_line(aes(group = participant), color = black40) +
+  stat_summary(fun = "mean", geom = "line") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+  ambition_theme + xlab("") + ylab("FO social awareness") +
+  facet_grid(. ~ comp) #+ coord_cartesian(ylim = c(ymin, ymax))
+plt_fo_s_spag
 
 
 # --- create facets for FO utility only ---
@@ -239,6 +291,16 @@ plt_fo_u <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
   facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
 plt_fo_u
 
+plt_fo_u_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
+  geom_point(size = .5, color = black40) +
+  geom_line(aes(group = participant), color = black40) +
+  stat_summary(fun = "mean", geom = "line") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+  ambition_theme + xlab("Survey") + ylab("FO utility") +
+  facet_grid(. ~ comp) #+ coord_cartesian(ylim = c(ymin, ymax))
+plt_fo_u_spag
+
 
 ## --- Combine to create Figure S1 ---
 
@@ -246,3 +308,5 @@ ggpubr::ggarrange(
   plt_fo_a, plt_fo_s, plt_fo_u, nrow = 3, align = "hv")
 ggsave(filename = file.path(cd, "FigureS1.jpg"), 
        units = "cm", width = 16, height = 18)
+ggpubr::ggarrange(
+  plt_fo_a_spag, plt_fo_s_spag, plt_fo_u_spag, nrow = 3, align = "hv")
