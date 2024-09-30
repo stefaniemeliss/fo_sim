@@ -310,3 +310,25 @@ ggsave(filename = file.path(cd, "FigureS1.jpg"),
        units = "cm", width = 16, height = 18)
 ggpubr::ggarrange(
   plt_fo_a_spag, plt_fo_s_spag, plt_fo_u_spag, nrow = 3, align = "hv")
+
+# --- create figures for summary for educators ---
+
+plt_fo <- ggplot(data = dfl_fow, aes(x = variable, y = value, group = 1)) +
+  stat_summary(fun = "mean", geom = "line") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+  ambition_theme + xlab("Survey") + ylab("FO") +
+  coord_cartesian(ylim = c(70, 90))
+plt_fo
+ggsave(filename = file.path(cd, "summaryforeds1.jpg"), 
+       units = "cm", width = 16, height = 6)
+
+plt_fo_e <- ggplot(data = dfl_fo_ew, aes(x = variable, y = value, group = 1)) +
+  stat_summary(fun = "mean", geom = "line") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+  ambition_theme + xlab("Survey") + ylab("FO self-efficacy") +
+  coord_cartesian(ylim = c(ymin, ymax))
+plt_fo_e
+ggsave(filename = file.path(cd, "summaryforeds2.jpg"), 
+       units = "cm", width = 16, height = 6)
