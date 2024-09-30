@@ -35,6 +35,8 @@ df <- filter(df, Exclusion_GTR  == 0)
 
 ### H3
 
+> ADD VARIABLE df$ATT_intervention to ALL models as covariate
+
 ```{r, results='asis', echo = F}
 # --- H1 --- #
 
@@ -42,7 +44,7 @@ df <- filter(df, Exclusion_GTR  == 0)
 
 # run regression
 dv = "GTR.dec"
-m1 <- lm(scale(get(dv)) ~ scale(FO),
+m1 <- lm(scale(get(dv)) ~ scale(FO) + ATT_intervention,
          data = df)
 # sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
 
@@ -51,7 +53,7 @@ tmp <- summary(m1)
 coef <- as.data.frame(tmp$coefficients)
 coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
 coef[,-4] <- round(coef[, -4], 2)
-coef$Predictors <- c("(Intercept)", "FO")
+coef$Predictors <- c("(Intercept)", "FO", "Intervention")
 coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
 coef$`Std. Error` <- NULL
 row.names(coef) <- NULL
@@ -66,7 +68,7 @@ coef_dec <- coef
 # run regression
 dv = "GTR.may"
 cov = "GTR.dec"
-m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(FO),
+m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(FO) + ATT_intervention,
          data = df)
 # sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F)
 
@@ -75,10 +77,7 @@ tmp <- summary(m1)
 coef <- as.data.frame(tmp$coefficients)
 coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
 coef[,-4] <- round(coef[, -4], 2)
-coef$Predictors <- c("(Intercept)", "Autumn term", "FO")
-coef$Predictors <- ifelse(coef$Predictors == "scale(get(cov))", "Sim 1 measure",
-                          ifelse(coef$Predictors == "scale(FO)", "FO",
-                                 coef$Predictors))
+coef$Predictors <- c("(Intercept)", "Autumn term", "FO", "Intervention")
 coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
 coef$`Std. Error` <- NULL
 row.names(coef) <- NULL
@@ -113,6 +112,7 @@ dv = "GTR.dec"
 # sim 2 accuracy residualised
 m1 <- lm(scale(get(dv)) ~ 
            scale(FO) + 
+           ATT_intervention +
            scale(working_memory) + 
            scale(conscientiousness) +
            scale(DAMMQ_sum) +
@@ -129,7 +129,7 @@ tmp <- summary(m1)
 coef <- as.data.frame(tmp$coefficients)
 coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
 coef[,-4] <- round(coef[, -4], 2)
-coef$Predictors <- c("(Intercept)", "FO", "Working memory", "Conscientiousness", "Task mastery",
+coef$Predictors <- c("(Intercept)", "FO", "Intervention", "Working memory", "Conscientiousness", "Task mastery",
                      "GO - mastery approach", "GO - mastery avoidance", "GO - performance approach", "GO - performance avoidance")
 coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
 coef$`Std. Error` <- NULL
@@ -148,6 +148,7 @@ cov = "GTR.dec"
 m1 <- lm(scale(get(dv)) ~ 
            scale(get(cov)) +
            scale(FO) + 
+           ATT_intervention +
            scale(working_memory) + 
            scale(conscientiousness) +
            scale(DAMMQ_sum) +
@@ -164,7 +165,7 @@ tmp <- summary(m1)
 coef <- as.data.frame(tmp$coefficients)
 coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
 coef[,-4] <- round(coef[, -4], 2)
-coef$Predictors <- c("(Intercept)", "Autumn term", "FO", "Working memory", "Conscientiousness", "Task mastery",
+coef$Predictors <- c("(Intercept)", "Autumn term", "FO", "Intervention", "Working memory", "Conscientiousness", "Task mastery",
                      "GO - mastery approach", "GO - mastery avoidance", "GO - performance approach", "GO - performance avoidance")
 coef$Estimate <- paste0(coef$Estimate, " (", coef$`Std. Error`, ")")
 coef$`Std. Error` <- NULL
@@ -203,7 +204,7 @@ for (i in 1:length(FOS)) {
   dv = "GTR.dec"
   
   # run reg
-  m1 <- lm(scale(get(dv)) ~ scale(get(FOS[i])),
+  m1 <- lm(scale(get(dv)) ~ scale(get(FOS[i])) + ATT_intervention,
            data = df)
 
   # get beta coefs
@@ -211,7 +212,7 @@ for (i in 1:length(FOS)) {
   coef <- as.data.frame(tmp$coefficients)
   coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
   coef[,-4] <- round(coef[, -4], 2)
-  coef$Predictors <- c("(Intercept)", FOS_out[i])
+  coef$Predictors <- c("(Intercept)", FOS_out[i], "Intervention")
   row.names(coef) <- NULL
   coef$R2 <- ""
   coef$R2[1] <- weights::rd(tmp$r.squared, 2)
@@ -224,7 +225,7 @@ for (i in 1:length(FOS)) {
   cov = "GTR.dec"
   
     # run reg
-  m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(get(FOS[i])),
+  m1 <- lm(scale(get(dv)) ~ scale(get(cov)) + scale(get(FOS[i])) + ATT_intervention,
            data = df)
 
   # get beta coefs
@@ -232,7 +233,7 @@ for (i in 1:length(FOS)) {
   coef <- as.data.frame(tmp$coefficients)
   coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
   coef[,-4] <- round(coef[, -4], 2)
-  coef$Predictors <- c("(Intercept)", "Autumn term", FOS_out[i])
+  coef$Predictors <- c("(Intercept)", "Autumn term", FOS_out[i], "Intervention")
   row.names(coef) <- NULL
   coef$R2 <- ""
   coef$R2[1] <- weights::rd(tmp$r.squared, 2)
