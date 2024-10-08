@@ -117,7 +117,7 @@ tmp <- df %>% mutate(bin = ntile(FO, n = 25)) %>%
 ggplot(tmp, aes(x = acc_change, y = fo)) + 
   geom_point(col = navy) +
   ambition_theme + 
-  xlab("Change in participant skill between Sim 1 and 2")+ylab("Feedback orientation")
+  xlab("Improvement in participant skill between simulator sessions 1 and 2") + ylab("Feedback orientation")
 
 ggsave(filename = file.path(cd, "FigureS2acc.jpg"), 
        units = "cm", width = 20, height = 12)
@@ -127,7 +127,7 @@ ggsave(filename = file.path(cd, "FigureS2acc.jpg"),
 ggplot(tmp, aes(x = tot_change, y = fo)) + 
   geom_point(col = navy) +
   ambition_theme + 
-  xlab("Change in time off task between Sim 1 and 2")+ylab("Feedback orientation")
+  xlab("Improvement in pupil time off task between simulator sessions 1 and 2") + ylab("Feedback orientation")
 
 ggsave(filename = file.path(cd, "FigureS2tot.jpg"), 
        units = "cm", width = 20, height = 12)
