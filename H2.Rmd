@@ -13,7 +13,6 @@ rm(list=ls())
 # --- load functions from github ---
 
 devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
-devtools::source_url("https://github.com/stefaniemeliss/Global_Teaching_InSights/blob/main/functions.R?raw=TRUE")
 
 library(tidyr)
 library(dplyr)
@@ -31,7 +30,7 @@ df <- read.csv("All_data_FO.csv")
 
 df <- filter(df, Exclusion_H2 == 0)
 
-# script vars #
+# script vars 
 
 vars <- c("FO",
           "FO utility",
@@ -114,7 +113,6 @@ for (i in 1:length(vars)) {
   out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df[, v1], x = df[, v2], method = "paired"), 2))
   
 }
-names(out) <- c("variable", "Survey 1", "Survey 2", "Improvement", "Paired t-test")
 
 summed <- out
 
@@ -165,7 +163,6 @@ for (i in 1:length(vars)) {
   out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df[, v1], x = df[, v2], method = "paired"), 2))
   
 }
-names(out) <- c("variable", "Survey 1", "Survey 2", "Improvement", "Paired t-test")
 
 weighted <- out
 
@@ -195,6 +192,12 @@ out <- data.frame(
   diff = character(5),
   ttest = character(5)
 )
+
+vars <- c("FO",
+          "FO utility",
+          "FO accountability",
+          "FO social awareness",
+          "FO self-efficacy")
 
 # determine variable names: summed scores
 vars_1 <- vars_sum_1
@@ -228,7 +231,6 @@ for (i in 1:length(vars)) {
   out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df[, v1], x = df[, v2], method = "paired"), 2))
   
 }
-names(out) <- c("variable", "Survey 1", "Survey 2", "Improvement", "Paired t-test")
 
 summed <- out
 
@@ -277,7 +279,6 @@ for (i in 1:length(vars)) {
   out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df[, v1], x = df[, v2], method = "paired"), 2))
   
 }
-names(out) <- c("variable", "Survey 1", "Survey 2", "Improvement", "Paired t-test")
 
 weighted <- out
 
@@ -593,39 +594,21 @@ ggsave(filename = file.path(cd, "FigureS1_v2.jpg"),
 ### Exploratory analysis using time intervall between surveys as covariate
 
 ```{r, echo = F, results='asis'}
-
 timings <- read.csv("C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Follow up questionnaire/Survey timings/timings_SM.csv")
 
 df <- merge(df, timings, by = "participant")
 
-table_desc(data = df,
-           group_var = "phase",
-           dep_var = "survey_diff")
+psych::describe(df$survey_diff) %>% 
+  kbl(caption = "Descriptives of time interval between surveys (in days)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 
 hist(df$survey_diff, main = "Time interval between surveys (in days)")
 
-
-```
-
-
-
-##### Paired sample t-test with above median time interval between surveys only
-
-```{r, echo = F, results='asis'}
-
-# create DF for export
-out <- data.frame(
-  variable = character(5),
-  survey1 = character(5),
-  survey2 = character(5),
-  diff = character(5),
-  ttest = character(5)
-)
-
-# only select data from participants that had above median split values for time interval
-df_tmp <- df[df$survey_diff > median(df$survey_diff),]
-
-
+vars <- c("FO",
+          "FO utility",
+          "FO accountability",
+          "FO social awareness",
+          "FO self-efficacy")
 
 # determine variable names: summed scores
 vars_1 <- vars_sum_1
@@ -638,94 +621,136 @@ for (i in 1:length(vars)) {
   v1 <- vars_1[i]
   v2 <- vars_2[i]
   
-  # run paired t-test
-  ttest <- t.test(y = df_tmp[, v1],
-                  x = df_tmp[, v2],
-                  paired = T)
+  time_diff <- "survey_diff"
   
-  # get survey 1 descriptives
-  survey1 <- round(psych::describe(df_tmp[, v1]), 2)
-  # get survey 2 descriptives
-  survey2 <- round(psych::describe(df_tmp[, v2]), 2)
-  # get diff descriptives
-  df_tmp$diff <- df_tmp[, v2] - df_tmp[, v1]
-  diff <- round(psych::describe(df_tmp[, "diff"]), 2)
+  # run reg
+  m1 <- lm(scale(get(v2)) ~ scale(get(time_diff)) * scale(get(v1)),
+           data = df)
+  # sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F,pred.labels = c("Intercept", cov, FOS[i]))
   
-  # fill table #
-  out[i, "variable"] <- vars[i]
-  out[i, "survey1"] <- paste0(survey1$mean, " (", survey1$sd, ") [", survey1$min, "; ", survey1$max, "]")
-  out[i, "survey2"] <- paste0(survey2$mean, " (", survey2$sd, ") [", survey2$min, "; ", survey2$max, "]")
-  out[i, "diff"] <- paste0(diff$mean, " (", diff$sd, ") [", diff$min, "; ", diff$max, "]")
-  out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df_tmp[, v1], x = df_tmp[, v2], method = "paired"), 2))
+  # get beta coefs
+  tmp <- summary(m1)
+  coef <- as.data.frame(tmp$coefficients)
+  coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+  coef[,-4] <- round(coef[, -4], 2)
+  coef$Predictors <- c("(Intercept)", "Time interval", paste(vars[i], " - Survey 1"), paste0("Time interval x ",vars[i] ))
+  row.names(coef) <- NULL
+  coef$R2 <- ""
+  coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+  
+  
+  if (i == 1) {
+    coef_sum <- coef
+  } else {
+    coef_sum <- rbind(coef_sum, coef)
+  }
   
 }
-names(out) <- c("variable", "Survey 1", "Survey 2", "Improvement", "Paired t-test")
 
-summed <- out
+coef_sum <- coef_sum %>%
+  select(Predictors, everything())
 
-kbl(summed, caption = "Summed scores") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
-
-
-# create DF for export
-out <- data.frame(
-  variable = character(5),
-  survey1 = character(5),
-  survey2 = character(5),
-  diff = character(5),
-  ttest = character(5)
-)
+kbl(coef_sum, caption = "Weighted scores") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  pack_rows(paste0(vars[1], " - Survey 2"), 1, 4) %>%
+  pack_rows(paste0(vars[2], " - Survey 2"), 5, 8) %>%
+  pack_rows(paste0(vars[3], " - Survey 2"), 9, 12) %>%
+  pack_rows(paste0(vars[4], " - Survey 2"), 13, 16) %>%
+  pack_rows(paste0(vars[5], " - Survey 2"), 17, 20)
 
 # determine variable names: weighted scores
 vars_1 <- vars_wtd_1
 vars_2 <- vars_wtd_2
-
-# loop over vraibles #
 
 for (i in 1:length(vars)) {
   
   v1 <- vars_1[i]
   v2 <- vars_2[i]
   
-  # run paired t-test
-  ttest <- t.test(y = df_tmp[, v1],
-                  x = df_tmp[, v2],
-                  paired = T)
+  time_diff <- "survey_diff"
   
-  # get survey 1 descriptives
-  survey1 <- round(psych::describe(df_tmp[, v1]), 2)
-  # get survey 2 descriptives
-  survey2 <- round(psych::describe(df_tmp[, v2]), 2)
-  # get diff descriptives
-  df_tmp$diff <- df_tmp[, v2] - df_tmp[, v1]
-  diff <- round(psych::describe(df_tmp[, "diff"]), 2)
+  # run reg
+  m1 <- lm(scale(get(v2)) ~ scale(get(time_diff)) * scale(get(v1)),
+           data = df)
+  # sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F,pred.labels = c("Intercept", cov, FOS[i]))
   
-  # fill table #
-  out[i, "variable"] <- vars[i]
-  out[i, "survey1"] <- paste0(survey1$mean, " (", survey1$sd, ") [", survey1$min, "; ", survey1$max, "]")
-  out[i, "survey2"] <- paste0(survey2$mean, " (", survey2$sd, ") [", survey2$min, "; ", survey2$max, "]")
-  out[i, "diff"] <- paste0(diff$mean, " (", diff$sd, ") [", diff$min, "; ", diff$max, "]")
-  out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df_tmp[, v1], x = df_tmp[, v2], method = "paired"), 2))
+  # get beta coefs
+  tmp <- summary(m1)
+  coef <- as.data.frame(tmp$coefficients)
+  coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
+  coef[,-4] <- round(coef[, -4], 2)
+  coef$Predictors <- c("(Intercept)", "Time interval", paste(vars[i], " - Survey 1"), paste0("Time interval x ",vars[i] ))
+  row.names(coef) <- NULL
+  coef$R2 <- ""
+  coef$R2[1] <- weights::rd(tmp$r.squared, 2)
+  
+  
+  if (i == 1) {
+    coef_wtd <- coef
+  } else {
+    coef_wtd <- rbind(coef_wtd, coef)
+  }
   
 }
 
-names(out) <- c("variable", "Survey 1", "Survey 2", "Improvement", "Paired t-test")
+coef_wtd <- coef_wtd %>%
+  select(Predictors, everything())
 
-weighted <- out
+kbl(coef_wtd, caption = "Weighted scores") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  pack_rows(paste0(vars[1], " - Survey 2"), 1, 4) %>%
+  pack_rows(paste0(vars[2], " - Survey 2"), 5, 8) %>%
+  pack_rows(paste0(vars[3], " - Survey 2"), 9, 12) %>%
+  pack_rows(paste0(vars[4], " - Survey 2"), 13, 16) %>%
+  pack_rows(paste0(vars[5], " - Survey 2"), 17, 20)
 
-kbl(weighted, caption = "Weighted scores") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+# --- create output for export ---#
+
+coef_sum$Estimate <- paste0(coef_sum$Estimate, " (", coef_sum$`Std. Error`,")")
+coef_sum$`Std. Error` <- NULL
+coef_wtd$Estimate <- paste0(coef_wtd$Estimate, " (", coef_wtd$`Std. Error`,")")
+coef_wtd$`Std. Error` <- NULL
+
+coefs <- merge(coef_sum, coef_wtd, by = 0)
+coefs <- coefs[order(as.numeric(coefs$Row.names)), ]
+coefs$Row.names <- NULL
+coefs$Predictors <- coefs$Predictors.x
+coefs$Predictors.x <- NULL
+coefs$Predictors.y <- NULL
 
 
-# combine both
-out <- merge(summed, weighted, by = "variable")
+coefs <- coefs %>%
+  select(Predictors, everything())
 
-write.csv(out, file = file.path(cd, "H2_twosided_mediansplit.csv"), row.names = F)
+# create headers
+header <- coefs[1, ]
+header[1, 2:ncol(header)] <- ""
+
+# rbind header with data
+header[, 1] <- vars[1]
+out <- rbind(header, coefs[1:4, ])
+header[, 1] <- vars[2]
+out <- rbind(out, header, coefs[5:8, ])
+header[, 1] <- vars[3]
+out <- rbind(out, header, coefs[9:12, ])
+header[, 1] <- vars[4]
+out <- rbind(out, header, coefs[13:16, ])
+header[, 1] <- vars[5]
+out <- rbind(out, header, coefs[17:20, ])
+
+names(out) <- c("", "beta (SE)", "t", "p", "R2", "beta (SE)", "t", "p", "R2")
+
+# save file
+write.csv(out,
+          file = file.path(cd, "H2_exp.csv"),
+          row.names = F)
+
+
 
 ```
 
 
-#### Predicting improvement with time interval
 
 ```{r, echo = F, results='asis'}
 
@@ -861,16 +886,32 @@ names(out) <- c("", "beta (SE)", "t", "p", "R2", "beta (SE)", "t", "p", "R2")
 
 # save file
 write.csv(out,
-          file = file.path(cd, "H2_exp_v1.csv"),
+          file = file.path(cd, "H2_exp_v2.csv"),
           row.names = F)
 
 
 
 ```
 
-##### Predicting Survey 2 measures with Survey 1 measures, time interval and interaction  
+
+
+### Above median time interval between surveys only
 
 ```{r, echo = F, results='asis'}
+
+# create DF for export
+out <- data.frame(
+  variable = character(5),
+  survey1 = character(5),
+  survey2 = character(5),
+  diff = character(5),
+  ttest = character(5)
+)
+
+# only select data from participants that had above median split values for time interval
+df_tmp <- df[df$survey_diff > median(df$survey_diff),]
+
+
 
 # determine variable names: summed scores
 vars_1 <- vars_sum_1
@@ -883,137 +924,89 @@ for (i in 1:length(vars)) {
   v1 <- vars_1[i]
   v2 <- vars_2[i]
   
-  time_diff <- "survey_diff"
+  # run paired t-test
+  ttest <- t.test(y = df_tmp[, v1],
+                  x = df_tmp[, v2],
+                  paired = T)
   
-  # run reg
-  m1 <- lm(scale(get(v2)) ~ scale(get(time_diff)) * scale(get(v1)),
-           data = df)
-  # sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F,pred.labels = c("Intercept", cov, FOS[i]))
+  # get survey 1 descriptives
+  survey1 <- round(psych::describe(df_tmp[, v1]), 2)
+  # get survey 2 descriptives
+  survey2 <- round(psych::describe(df_tmp[, v2]), 2)
+  # get diff descriptives
+  df_tmp$diff <- df_tmp[, v2] - df_tmp[, v1]
+  diff <- round(psych::describe(df_tmp[, "diff"]), 2)
   
-  # get beta coefs
-  tmp <- summary(m1)
-  coef <- as.data.frame(tmp$coefficients)
-  coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
-  coef[,-4] <- round(coef[, -4], 2)
-  coef$Predictors <- c("(Intercept)", "Time interval", paste(vars[i], " - Survey 1"), paste0("Time interval x ",vars[i] ))
-  row.names(coef) <- NULL
-  coef$R2 <- ""
-  coef$R2[1] <- weights::rd(tmp$r.squared, 2)
-  
-  
-  if (i == 1) {
-    coef_sum <- coef
-  } else {
-    coef_sum <- rbind(coef_sum, coef)
-  }
+  # fill table #
+  out[i, "variable"] <- vars[i]
+  out[i, "survey1"] <- paste0(survey1$mean, " (", survey1$sd, ") [", survey1$min, "; ", survey1$max, "]")
+  out[i, "survey2"] <- paste0(survey2$mean, " (", survey2$sd, ") [", survey2$min, "; ", survey2$max, "]")
+  out[i, "diff"] <- paste0(diff$mean, " (", diff$sd, ") [", diff$min, "; ", diff$max, "]")
+  out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df_tmp[, v1], x = df_tmp[, v2], method = "paired"), 2))
   
 }
 
-coef_sum <- coef_sum %>%
-  select(Predictors, everything())
+summed <- out
 
-kbl(coef_sum, caption = "Weighted scores") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
-  pack_rows(paste0(vars[1], " - Survey 2"), 1, 4) %>%
-  pack_rows(paste0(vars[2], " - Survey 2"), 5, 8) %>%
-  pack_rows(paste0(vars[3], " - Survey 2"), 9, 12) %>%
-  pack_rows(paste0(vars[4], " - Survey 2"), 13, 16) %>%
-  pack_rows(paste0(vars[5], " - Survey 2"), 17, 20)
+kbl(summed, caption = "Summed scores") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+
+# create DF for export
+out <- data.frame(
+  variable = character(5),
+  survey1 = character(5),
+  survey2 = character(5),
+  diff = character(5),
+  ttest = character(5)
+)
 
 # determine variable names: weighted scores
 vars_1 <- vars_wtd_1
 vars_2 <- vars_wtd_2
+
+# loop over vraibles #
 
 for (i in 1:length(vars)) {
   
   v1 <- vars_1[i]
   v2 <- vars_2[i]
   
-  time_diff <- "survey_diff"
+  # run paired t-test
+  ttest <- t.test(y = df_tmp[, v1],
+                  x = df_tmp[, v2],
+                  paired = T)
   
-  # run reg
-  m1 <- lm(scale(get(v2)) ~ scale(get(time_diff)) * scale(get(v1)),
-           data = df)
-  # sjPlot::tab_model(m1, show.se = T, show.stat = T, show.ci = F,pred.labels = c("Intercept", cov, FOS[i]))
+  # get survey 1 descriptives
+  survey1 <- round(psych::describe(df_tmp[, v1]), 2)
+  # get survey 2 descriptives
+  survey2 <- round(psych::describe(df_tmp[, v2]), 2)
+  # get diff descriptives
+  df_tmp$diff <- df_tmp[, v2] - df_tmp[, v1]
+  diff <- round(psych::describe(df_tmp[, "diff"]), 2)
   
-  # get beta coefs
-  tmp <- summary(m1)
-  coef <- as.data.frame(tmp$coefficients)
-  coef[, 4] <- ifelse(coef[, 4] < 0.001, "<.001", weights::rd(coef[, 4], 3))
-  coef[,-4] <- round(coef[, -4], 2)
-  coef$Predictors <- c("(Intercept)", "Time interval", paste(vars[i], " - Survey 1"), paste0("Time interval x ",vars[i] ))
-  row.names(coef) <- NULL
-  coef$R2 <- ""
-  coef$R2[1] <- weights::rd(tmp$r.squared, 2)
-  
-  
-  if (i == 1) {
-    coef_wtd <- coef
-  } else {
-    coef_wtd <- rbind(coef_wtd, coef)
-  }
+  # fill table #
+  out[i, "variable"] <- vars[i]
+  out[i, "survey1"] <- paste0(survey1$mean, " (", survey1$sd, ") [", survey1$min, "; ", survey1$max, "]")
+  out[i, "survey2"] <- paste0(survey2$mean, " (", survey2$sd, ") [", survey2$min, "; ", survey2$max, "]")
+  out[i, "diff"] <- paste0(diff$mean, " (", diff$sd, ") [", diff$min, "; ", diff$max, "]")
+  out[i, "ttest"] <- paste0("t(", ttest$parameter, ") = ", round(ttest$statistic, 2), ", p = ", ifelse(ttest$p.value < 0.001, "<.001", weights::rd(ttest$p.value, 3)), ", Cohen's d = ", round(lsr::cohensD(y = df_tmp[, v1], x = df_tmp[, v2], method = "paired"), 2))
   
 }
 
-coef_wtd <- coef_wtd %>%
-  select(Predictors, everything())
 
-kbl(coef_wtd, caption = "Weighted scores") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
-  pack_rows(paste0(vars[1], " - Survey 2"), 1, 4) %>%
-  pack_rows(paste0(vars[2], " - Survey 2"), 5, 8) %>%
-  pack_rows(paste0(vars[3], " - Survey 2"), 9, 12) %>%
-  pack_rows(paste0(vars[4], " - Survey 2"), 13, 16) %>%
-  pack_rows(paste0(vars[5], " - Survey 2"), 17, 20)
+weighted <- out
+
+kbl(weighted, caption = "Weighted scores") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 
 
-# --- create output for export ---#
+# combine both
+out <- merge(summed, weighted, by = "variable")
+names(out) <- c("","Survey 1", "Survey 2", "Improvement", "Paired t-test")
 
-coef_sum$Estimate <- paste0(coef_sum$Estimate, " (", coef_sum$`Std. Error`,")")
-coef_sum$`Std. Error` <- NULL
-coef_wtd$Estimate <- paste0(coef_wtd$Estimate, " (", coef_wtd$`Std. Error`,")")
-coef_wtd$`Std. Error` <- NULL
-
-coefs <- merge(coef_sum, coef_wtd, by = 0)
-coefs <- coefs[order(as.numeric(coefs$Row.names)), ]
-coefs$Row.names <- NULL
-coefs$Predictors <- coefs$Predictors.x
-coefs$Predictors.x <- NULL
-coefs$Predictors.y <- NULL
-
-
-coefs <- coefs %>%
-  select(Predictors, everything())
-
-# create headers
-header <- coefs[1, ]
-header[1, 2:ncol(header)] <- ""
-
-# rbind header with data
-header[, 1] <- vars[1]
-out <- rbind(header, coefs[1:4, ])
-header[, 1] <- vars[2]
-out <- rbind(out, header, coefs[5:8, ])
-header[, 1] <- vars[3]
-out <- rbind(out, header, coefs[9:12, ])
-header[, 1] <- vars[4]
-out <- rbind(out, header, coefs[13:16, ])
-header[, 1] <- vars[5]
-out <- rbind(out, header, coefs[17:20, ])
-
-names(out) <- c("", "beta (SE)", "t", "p", "R2", "beta (SE)", "t", "p", "R2")
-
-# save file
-write.csv(out,
-          file = file.path(cd, "H2_exp_v2.csv"),
-          row.names = F)
-
-
+write.csv(out, file = file.path(cd, "H2_twosided_mediansplit.csv"), row.names = F)
 
 ```
-
-
-
-
 
 
