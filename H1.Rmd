@@ -105,6 +105,36 @@ kbl(coef_h1, row.names = F,
 
 ```
 
+```{r, echo = F}
+# group data into 25 equal-sized bins
+tmp <- df %>% mutate(bin = ntile(FO, n = 25)) %>%
+  # computed the mean of the x-variable and y-variable within each bin
+  group_by(bin) %>% 
+  summarise(fo = mean(FO),
+            acc_change = mean(Diff_sim1A_Sim2A), 
+            tot_change = mean(Diff_sim1ToT_sim2ToT)) 
+# create scatter plot with binned data
+ggplot(tmp, aes(x = acc_change, y = fo)) + 
+  geom_point(col = navy) +
+  ambition_theme + 
+  xlab("Change in participant skill between Sim 1 and 2")+ylab("Feedback orientation")
+
+ggsave(filename = file.path(cd, "FigureS2acc.jpg"), 
+       units = "cm", width = 20, height = 12)
+
+
+# create scatter plot with binned data
+ggplot(tmp, aes(x = tot_change, y = fo)) + 
+  geom_point(col = navy) +
+  ambition_theme + 
+  xlab("Change in time off task between Sim 1 and 2")+ylab("Feedback orientation")
+
+ggsave(filename = file.path(cd, "FigureS2tot.jpg"), 
+       units = "cm", width = 20, height = 12)
+
+```
+
+
 ### H1A
 
 ```{r, results='asis', echo = F}
