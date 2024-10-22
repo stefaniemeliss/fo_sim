@@ -1,5 +1,5 @@
 ---
-title: "FO - Hypothesis 2"
+title: "FO - Hypothesis 4"
 author: "Stefanie Meliss"
 date: "`r Sys.Date()`"
 output: html_document
@@ -22,7 +22,7 @@ library(kableExtra)
 
 cd = getwd()
 
-dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/OLD_fosim/Data/Final data files for analysis/FO"
 
 setwd(dir)
 
@@ -173,7 +173,7 @@ kbl(weighted, caption = "Weighted scores") %>%
 # combine both
 out <- merge(summed, weighted, by = "variable")
 
-write.csv(out, file = file.path(cd, "H2_onesided.csv"), row.names = F)
+write.csv(out, file = file.path(cd, "H4_onesided.csv"), row.names = F)
 
 ```
 
@@ -289,312 +289,231 @@ kbl(weighted, caption = "Weighted scores") %>%
 # combine both
 out <- merge(summed, weighted, by = "variable")
 
-write.csv(out, file = file.path(cd, "H2_twosided.csv"), row.names = F)
+write.csv(out, file = file.path(cd, "H4_twosided.csv"), row.names = F)
 
 ```
 
 ### Plots
 
-```{r, echo = F, warning = F}
+```{r, echo = F, warning = F, message=F, include=F}
 
-# --- prepare data ---
-
-# filter and select: Feedback orientation
-df_fo <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO, FO.2) 
-# reshape wide -> long
-dfl_fo <- reshape2::melt(df_fo)
-# format 
-dfl_fo$variable <- ifelse(dfl_fo$variable == "FO", "1", "2")
-dfl_fo$variable <- factor(dfl_fo$variable, levels = c("1", "2"))
-dfl_fo$construct <- "Feedback orientation"
-dfl_fo$comp <- "Summed score"
-
-# filter and select: Feedback orientation weighted
-df_fow <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO_wtd, FO2_wtd) 
-# reshape wide -> long
-dfl_fow <- reshape2::melt(df_fow)
-# format 
-dfl_fow$variable <- ifelse(dfl_fow$variable == "FO_wtd", "1", "2")
-dfl_fow$variable <- factor(dfl_fow$variable, levels = c("1", "2"))
-dfl_fow$construct <- "Feedback orientation"
-dfl_fow$comp <- "Weighted score"
-
-# filter and select: Feedback efficacy
-df_fo_e <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO_efficacy, FO_efficacy.2) 
-# reshape wide -> long
-dfl_fo_e <- reshape2::melt(df_fo_e)
-# format 
-dfl_fo_e$variable <- ifelse(dfl_fo_e$variable == "FO_efficacy", "1", "2")
-dfl_fo_e$variable <- factor(dfl_fo_e$variable, levels = c("1", "2"))
-dfl_fo_e$construct <- "FO self-efficacy"
-dfl_fo_e$comp <- "Summed score"
-
-# filter and select: Feedback efficacy weighted
-df_fo_ew <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO_efficacy_wtd, FO2_efficacy_wtd) 
-# reshape wide -> long
-dfl_fo_ew <- reshape2::melt(df_fo_ew)
-# format 
-dfl_fo_ew$variable <- ifelse(dfl_fo_ew$variable == "FO_efficacy_wtd", "1", "2")
-dfl_fo_ew$variable <- factor(dfl_fo_ew$variable, levels = c("1", "2"))
-dfl_fo_ew$construct <- "FO self-efficacy"
-dfl_fo_ew$comp <- "Weighted score"
-
-# filter and select: Feedback utility 
-df_fo_u <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO_utility, FO_utility.2) 
-# reshape wide -> long
-dfl_fo_u <- reshape2::melt(df_fo_u)
-# format 
-dfl_fo_u$variable <- ifelse(dfl_fo_u$variable == "FO_utility", "1", "2")
-dfl_fo_u$variable <- factor(dfl_fo_u$variable, levels = c("1", "2"))
-dfl_fo_u$construct <- "FO utility"
-dfl_fo_u$comp <- "Summed score"
-
-# filter and select: Feedback utility weighted
-df_fo_uw <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO_utility_wtd, FO2_utility_wtd) 
-# reshape wide -> long
-dfl_fo_uw <- reshape2::melt(df_fo_uw)
-# format 
-dfl_fo_uw$variable <- ifelse(dfl_fo_uw$variable == "FO_utility_wtd", "1", "2")
-dfl_fo_uw$variable <- factor(dfl_fo_uw$variable, levels = c("1", "2"))
-dfl_fo_uw$construct <- "FO utility"
-dfl_fo_uw$comp <- "Weighted score"
-
-# filter and select: Feedback social awareness 
-df_fo_s <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO_awareness, FO_awareness.2) 
-# reshape wide -> long
-dfl_fo_s <- reshape2::melt(df_fo_s)
-# format 
-dfl_fo_s$variable <- ifelse(dfl_fo_s$variable == "FO_awareness", "1", "2")
-dfl_fo_s$variable <- factor(dfl_fo_s$variable, levels = c("1", "2"))
-dfl_fo_s$construct <- "FO social awareness"
-dfl_fo_s$comp <- "Summed score"
-
-# filter and select: Feedback social awareness weighted
-df_fo_sw <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO_aware_wtd, FO2_aware_wtd) 
-# reshape wide -> long
-dfl_fo_sw <- reshape2::melt(df_fo_sw)
-# format 
-dfl_fo_sw$variable <- ifelse(dfl_fo_sw$variable == "FO_aware_wtd", "1", "2")
-dfl_fo_sw$variable <- factor(dfl_fo_sw$variable, levels = c("1", "2"))
-dfl_fo_sw$construct <- "FO social awareness"
-dfl_fo_sw$comp <- "Weighted score"
-
-# filter and select: Feedback accountability 
-df_fo_a <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO_accountability, FO_accountability.2) 
-# reshape wide -> long
-dfl_fo_a <- reshape2::melt(df_fo_a)
-# format 
-dfl_fo_a$variable <- ifelse(dfl_fo_a$variable == "FO_accountability", "1", "2")
-dfl_fo_a$variable <- factor(dfl_fo_a$variable, levels = c("1", "2"))
-dfl_fo_a$construct <- "FO accountability"
-dfl_fo_a$comp <- "Summed score"
-
-# filter and select: Feedback accountability weighted
-df_fo_aw <- df %>%
-  filter(Exclusion_H2==0) %>%
-  select(participant, FO_account_wtd, FO2_account_wtd) 
-# reshape wide -> long
-dfl_fo_aw <- reshape2::melt(df_fo_aw)
-# format 
-dfl_fo_aw$variable <- ifelse(dfl_fo_aw$variable == "FO_account_wtd", "1", "2")
-dfl_fo_aw$variable <- factor(dfl_fo_aw$variable, levels = c("1", "2"))
-dfl_fo_aw$construct <- "FO accountability"
-dfl_fo_aw$comp <- "Weighted score"
-
-
-
-## rbind all
-
-
-# # --- create plot in facets: NOT USED ---
-# 
-# dfl <- rbind(dfl_fo, dfl_fow)
-# dfl <- rbind(dfl, dfl_fo_e)
-# dfl <- rbind(dfl, dfl_fo_ew)
-# dfl$construct <- factor(dfl$construct, levels = c("FO", "FO self-efficacy"))
-# 
-# plt <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-#   stat_summary(fun = "mean", geom = "line") +
-#   stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-#   stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-#   ambition_theme + xlab("Survey") + ylab("Self-report measure") +
-#   facet_grid(construct ~ comp, scales = "free_y")
-# plt
 
 # --- set some overall parameter --- #
 
 size_dot = 2
-ymin = 17
-ymax = 29
-
-# --- create facets for FO only ---
-
-dfl <- rbind(dfl_fo, dfl_fow)
-dfl$construct <- factor(dfl$construct, levels = c("FO", "FO self-efficacy"))
-
-plt_fo <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("") + ylab("FO") +
-  facet_grid(. ~ comp) + coord_cartesian(ylim = c(70, 90))
-# plt_fo
-
-plt_fo_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  geom_point(size = .5, color = black40) +
-  geom_line(aes(group = participant), color = black40, linewidth = .5) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("") + ylab("FO") +
-  facet_grid(. ~ comp) # + coord_cartesian(ylim = c(70, 90))
-# plt_fo_spag
-
-# --- create facets for FO efficacy only ---
-
-dfl <- rbind(dfl_fo_e, dfl_fo_ew)
-dfl$construct <- factor(dfl$construct, levels = c("FO", "FO self-efficacy"))
-
-plt_fo_e <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("Survey") + ylab("FO self-efficacy") +
-  facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
-# plt_fo_e
-
-plt_fo_e_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  geom_point(size = .5, color = black40) +
-  geom_line(aes(group = participant), color = black40, linewidth = .5) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("Survey") + ylab("FO self-efficacy") +
-  facet_grid(. ~ comp) #+ coord_cartesian(ylim = c(ymin, ymax))
-# plt_fo_e_spag
+ymin_main = c(75, 15)
+ymax_main = c(85, 25)
+ymin_app = c(60, 17)
+ymax_app = c(100, 29)
+ymin_app = c(60, 9) 
+ymax_app = c(100, 35)
+px_w <- 1080
+px_h <- 433
 
 
-## --- Combine to create Figure 2 ---
+sum_1 <- c("FO", 
+           "FO_efficacy", 
+           "FO_utility", 
+           "FO_awareness", 
+           "FO_accountability")
+sum_2 <- c("FO.2", 
+           "FO_efficacy.2", 
+           "FO_utility.2", 
+           "FO_awareness.2", 
+           "FO_accountability.2")
+wtd_1 <- c("FO_wtd", 
+           "FO_efficacy_wtd", 
+           "FO_utility_wtd", 
+           "FO_aware_wtd", 
+           "FO_account_wtd")
+wtd_2 <- c("FO2_wtd", 
+           "FO2_efficacy_wtd", 
+           "FO2_utility_wtd", 
+           "FO2_aware_wtd", 
+           "FO2_account_wtd")
+construct <- c("FO", "FO self-efficacy", "FO utility", "FO social awareness", "FO accountability")
 
-ggpubr::ggarrange(
-  plt_fo, plt_fo_e, nrow = 2, align = "hv")
-ggsave(filename = file.path(cd, "Figure2.jpg"), 
+out <- c("FO", "FOselfeff", "FOutil", "FOaware", "FOaccount")
+
+
+for (i in 1:length(construct)) {
+  
+  # --- prepare data ---
+  
+  # select: summed score
+  df_sum <- df %>%
+    select(participant, sum_1[i], sum_2[i]) 
+  # reshape wide -> long
+  dfl_sum <- reshape2::melt(df_sum)
+  # format 
+  dfl_sum$variable <- ifelse(dfl_sum$variable == sum_1[i], "1", "2")
+  dfl_sum$variable <- factor(dfl_sum$variable, levels = c("1", "2"))
+  dfl_sum$construct <- construct[i]
+  dfl_sum$comp <- "Summed score"
+  
+  # select: weighted score
+  df_wtd <- df %>%
+    select(participant, wtd_1[i], wtd_2[i]) 
+  # reshape wide -> long
+  dfl_wtd <- reshape2::melt(df_wtd)
+  # format 
+  dfl_wtd$variable <- ifelse(dfl_wtd$variable == wtd_1[i], "1", "2")
+  dfl_wtd$variable <- factor(dfl_wtd$variable, levels = c("1", "2"))
+  dfl_wtd$construct <- construct[i]
+  dfl_wtd$comp <- "Weighted score"
+  
+  # combine
+  dfl <- rbind(dfl_sum, dfl_wtd)
+  
+  # --- create plots ---
+  
+  
+  if (construct[i] == "FO" | construct[i] == "FO self-efficacy") {
+    
+    if (i == 1) {
+      ymin = ymin_main[1]
+      ymax = ymax_main[1]
+      breaks = 3
+    } else {
+      ymin = ymin_main[2]
+      ymax = ymax_main[2]
+      breaks = 3
+    }
+    
+    
+    # main graph
+    main <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
+      stat_summary(fun = "mean", geom = "line") +
+      stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+      stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+      ambition_theme + 
+      facet_grid(. ~ comp) + 
+      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = 3)
+    
+    # add axis labels
+    if (construct[i] == "FO self-efficacy") {
+      main <- main + xlab("Survey") + ylab(construct[i])
+    } else {
+      main <- main + xlab("") + ylab(construct[i])
+    }
+    
+    # Store object in the global environment.
+    assign(paste0("plt_", out[i]), main)
+    
+    
+    # export for Ambition pub - sum
+    plt <- ggplot(data = dfl_sum, aes(x = variable, y = value, group = 1)) +
+      stat_summary(fun = "mean", geom = "line") +
+      stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+      stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+      ambition_theme_minimal +
+      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = 3)
+    ggsave(plot = plt,
+           filename = file.path(cd, paste0("Figure5_H4_", out[i], "_sum.jpg")), 
+           units = "px", width = px_w, height = px_h, dpi = 300)
+    
+    # export for Ambition pub - wtd
+    plt <- ggplot(data = dfl_wtd, aes(x = variable, y = value, group = 1)) +
+      stat_summary(fun = "mean", geom = "line") +
+      stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+      stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+      ambition_theme_minimal +
+      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = 3)
+    ggsave(plot = plt,
+           filename = file.path(cd, paste0("Figure5_H4_", out[i], "_wtd.jpg")), 
+           units = "px", width = px_w, height = px_h, dpi = 300)
+    
+  }
+  
+  if (i == 1) {
+    ymin = ymin_app[1]
+    ymax = ymax_app[1]
+    breaks = 5
+  } else {
+    ymin = ymin_app[2]
+    ymax = ymax_app[2]
+    breaks = 6
+  }
+  
+  
+  # appendix
+  appendix <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
+    geom_point(size = .1, color = black40) +
+    geom_line(aes(group = participant), color = black40, linewidth = .25) +
+    stat_summary(fun = "mean", geom = "line") +
+    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+    stat_summary(fun = "mean", geom = "point",size = size_dot/2, color = coral) +
+    ambition_theme + 
+    facet_grid(. ~ comp) + 
+    coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
+
+  # add axis labels
+  if (construct[i] == "FO self-efficacy") {
+    appendix <- appendix + xlab("Survey") + ylab(construct[i])
+  } else {
+    appendix <- appendix + xlab("") + ylab(construct[i])
+  }
+  
+  # Store object in the global environment.
+  assign(paste0("spagh_", out[i]), appendix)
+  
+  
+  # export for Ambition pub - sum
+  plt <- ggplot(data = dfl_sum, aes(x = variable, y = value, group = 1)) +
+    geom_point(size = .1, color = black40) +
+    geom_line(aes(group = participant), color = black40, linewidth = .25) +
+    stat_summary(fun = "mean", geom = "line") +
+    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+    stat_summary(fun = "mean", geom = "point",size = size_dot/2, color = coral) +
+    ambition_theme_minimal +
+    coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
+  ggsave(plot = plt,
+         filename = file.path(cd, paste0("FigureB3_H4_", out[i], "_sum.jpg")), 
+         units = "px", width = px_w, height = px_h, dpi = 300)
+  
+  # export for Ambition pub - wtd
+  plt <- ggplot(data = dfl_wtd, aes(x = variable, y = value, group = 1)) +
+    geom_point(size = .1, color = black40) +
+    geom_line(aes(group = participant), color = black40, linewidth = .25) +
+    stat_summary(fun = "mean", geom = "line") +
+    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+    stat_summary(fun = "mean", geom = "point",size = size_dot/2, color = coral) +
+    ambition_theme_minimal +
+    coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
+  ggsave(plot = plt,
+         filename = file.path(cd, paste0("FigureB3_H4_", out[i], "_wtd.jpg")), 
+         units = "px", width = px_w, height = px_h, dpi = 300)
+  
+}
+
+
+## --- Combine to create Figure 5 ---
+
+main <- ggpubr::ggarrange(
+  plt_FO, plt_FOselfeff, nrow = 2, align = "hv")
+ggsave(plot = main,
+       filename = file.path(cd, "Figure5_H4.jpg"), 
        units = "cm", width = 16, height = 12)
 
+## --- Combine to create Figure B3 ---
 
-# --- create facets for FO accountability only ---
-
-dfl <- rbind(dfl_fo_a, dfl_fo_aw)
-dfl$construct <- factor(dfl$construct, levels = c("FO", "FO accountability"))
-
-plt_fo_a <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("") + ylab("FO accountability") +
-  facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
-# plt_fo_a
-
-plt_fo_a_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  geom_point(size = .5, color = black40) +
-  geom_line(aes(group = participant), color = black40, linewidth = .5) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("") + ylab("FO accountability") +
-  facet_grid(. ~ comp) #+ coord_cartesian(ylim = c(ymin, ymax))
-# plt_fo_a_spag
-
-# --- create facets for FO social awareness only ---
-
-dfl <- rbind(dfl_fo_s, dfl_fo_sw)
-dfl$construct <- factor(dfl$construct, levels = c("FO", "FO social awareness"))
-
-plt_fo_s <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("") + ylab("FO social awareness") +
-  facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
-# plt_fo_s
-
-plt_fo_s_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  geom_point(size = .5, color = black40) +
-  geom_line(aes(group = participant), color = black40, linewidth = .5) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("") + ylab("FO social awareness") +
-  facet_grid(. ~ comp) #+ coord_cartesian(ylim = c(ymin, ymax))
-# plt_fo_s_spag
-
-
-# --- create facets for FO utility only ---
-
-dfl <- rbind(dfl_fo_u, dfl_fo_uw)
-dfl$construct <- factor(dfl$construct, levels = c("FO", "FO utility"))
-
-plt_fo_u <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("Survey") + ylab("FO utility") +
-  facet_grid(. ~ comp) + coord_cartesian(ylim = c(ymin, ymax))
-# plt_fo_u
-
-plt_fo_u_spag <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-  geom_point(size = .5, color = black40) +
-  geom_line(aes(group = participant), color = black40, linewidth = .5) +
-  stat_summary(fun = "mean", geom = "line") +
-  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-  stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
-  ambition_theme + xlab("Survey") + ylab("FO utility") +
-  facet_grid(. ~ comp) #+ coord_cartesian(ylim = c(ymin, ymax))
-# plt_fo_u_spag
-
-
-## --- Combine to create Figure S1 ---
-
-ggpubr::ggarrange(
-  plt_fo_a, plt_fo_s, plt_fo_u, nrow = 3, align = "hv")
-ggsave(filename = file.path(cd, "FigureS1.jpg"), 
-       units = "cm", width = 16, height = 18)
-```
-
-```{r, include=F}
-ggpubr::ggarrange(plt_fo_spag,
-                  plt_fo_u_spag, 
-                  plt_fo_a_spag, 
-                  plt_fo_s_spag, 
-                  plt_fo_e_spag,
-                  nrow = 5, align = "hv")
-ggsave(filename = file.path(cd, "FigureS1_v2.jpg"), 
+appendix <- ggpubr::ggarrange(
+  spagh_FO, spagh_FOutil, spagh_FOaccount, spagh_FOaware, spagh_FOselfeff,
+  nrow = 5, align = "hv")
+ggsave(plot = appendix,
+       filename = file.path(cd, "FigureB3_H4.jpg"), 
        units = "cm", width = 21, height = 30)
 
 ```
 
+![image](Figure5_H4.jpg)
+![image](FigureB3_H4.jpg)
+
+
 ### Exploratory analysis using time intervall between surveys as covariate
 
 ```{r, echo = F, results='asis'}
-timings <- read.csv("C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Follow up questionnaire/Survey timings/timings_SM.csv")
+timings <- read.csv("C:/Users/stefanie.meliss/OneDrive - Ambition Institute/OLD_fosim/Data/Follow up questionnaire/Survey timings/timings_SM.csv")
 
 df <- merge(df, timings, by = "participant")
 
@@ -743,7 +662,7 @@ names(out) <- c("", "beta (SE)", "t", "p", "R2", "beta (SE)", "t", "p", "R2")
 
 # save file
 write.csv(out,
-          file = file.path(cd, "H2_exp.csv"),
+          file = file.path(cd, "H4_exp.csv"),
           row.names = F)
 
 
@@ -886,7 +805,7 @@ names(out) <- c("", "beta (SE)", "t", "p", "R2", "beta (SE)", "t", "p", "R2")
 
 # save file
 write.csv(out,
-          file = file.path(cd, "H2_exp_v2.csv"),
+          file = file.path(cd, "H4_exp_v2.csv"),
           row.names = F)
 
 
@@ -1005,7 +924,7 @@ kbl(weighted, caption = "Weighted scores") %>%
 out <- merge(summed, weighted, by = "variable")
 names(out) <- c("","Survey 1", "Survey 2", "Improvement", "Paired t-test")
 
-write.csv(out, file = file.path(cd, "H2_twosided_mediansplit.csv"), row.names = F)
+write.csv(out, file = file.path(cd, "H4_twosided_mediansplit.csv"), row.names = F)
 
 ```
 
