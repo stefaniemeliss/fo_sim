@@ -1,5 +1,5 @@
 ---
-title: "FO - Hypothesis 3"
+title: "FO - Hypothesis 2"
 author: "Stefanie Meliss"
 date: "`r Sys.Date()`"
 output: html_document
@@ -23,7 +23,7 @@ library(kableExtra)
 
 cd = getwd()
 
-dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/OLD_fosim/Data/Final data files for analysis/FO"
 
 # load data
 df <- read.csv(file.path(dir, "All_data_FO.csv"))
@@ -33,12 +33,12 @@ df <- filter(df, Exclusion_GTR  == 0)
 
 ```
 
-### H3
+### H2
 
 > ADD VARIABLE df$ATT_intervention to ALL models as covariate
 
 ```{r, results='asis', echo = F}
-# --- H1 --- #
+# --- H2 --- #
 
 # Autumn term #
 
@@ -88,22 +88,22 @@ coef$R2[1] <- weights::rd(tmp$r.squared, 2)
 coef_may <- coef
 
 # merge #
-coef_h3 <- merge(coef_dec, coef_may, by = "Predictors", all = T)
-coef_h3$Predictors <- factor(coef_h3$Predictors, levels = coef_may$Predictors)
-coef_h3 <- coef_h3[order(coef_h3$Predictors), ]
+coef_H2 <- merge(coef_dec, coef_may, by = "Predictors", all = T)
+coef_H2$Predictors <- factor(coef_H2$Predictors, levels = coef_may$Predictors)
+coef_H2 <- coef_H2[order(coef_H2$Predictors), ]
 
 # add to markdown
-kbl(coef_h3, row.names = F,
-    col.names = gsub(".x|.y", "", names(coef_h3))) %>%
+kbl(coef_H2, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_H2))) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
   add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4))
 
 ```
 
-### H3A
+### H2A
 
 ```{r, results='asis', echo = F}
-# --- H1A --- #
+# --- H2A --- #
 
 # Autumn term #
 
@@ -177,22 +177,22 @@ coef$R2[1] <- weights::rd(tmp$r.squared, 2)
 coef_may <- coef
 
 # merge #
-coef_h3a <- merge(coef_dec, coef_may, by = "Predictors", all = T)
-coef_h3a$Predictors <- factor(coef_h3a$Predictors, levels = coef_may$Predictors)
-coef_h3a <- coef_h3a[order(coef_h3a$Predictors), ]
+coef_H2a <- merge(coef_dec, coef_may, by = "Predictors", all = T)
+coef_H2a$Predictors <- factor(coef_H2a$Predictors, levels = coef_may$Predictors)
+coef_H2a <- coef_H2a[order(coef_H2a$Predictors), ]
 
 # add to markdown
-kbl(coef_h3a, row.names = F,
-    col.names = gsub(".x|.y", "", names(coef_h3a))) %>%
+kbl(coef_H2a, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_H2a))) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
   add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4))
 
 ```
 
-### H3B
+### H2B
 
 ```{r, results='asis', echo = F, warning=F}
-# --- H1B --- #
+# --- H2B --- #
 
 FOS <- c("FO_utility", "FO_accountability", "FO_awareness", "FO_efficacy")
 FOS_out <- c("FO utility", "FO accountability", "FO social awareness", "FO self-efficacy")
@@ -245,13 +245,13 @@ for (i in 1:length(FOS)) {
   coef <- merge(coef_dec, coef_may, by = "Predictors", all = T)
 
   if (i == 1) {
-    coef_h3b <- coef
+    coef_H2b <- coef
     
     beta_dec <- coef_dec[grepl("FO", coef_dec$Predictors), c("Predictors", "Estimate", "Std. Error")]
     beta_may <- coef_may[grepl("FO", coef_may$Predictors), c("Predictors", "Estimate", "Std. Error")]
 
   } else {
-    coef_h3b <- rbind(coef_h3b, coef)
+    coef_H2b <- rbind(coef_H2b, coef)
     beta_dec <- rbind(beta_dec, coef_dec[grepl("FO", coef_dec$Predictors), c("Predictors", "Estimate", "Std. Error")]) 
     beta_may <- rbind(beta_may, coef_may[grepl("FO", coef_may$Predictors), c("Predictors", "Estimate", "Std. Error")])
   }
@@ -263,16 +263,16 @@ beta_dec$DV <- "Autumn term"
 beta_may$DV <- "Spring term"
 
 # re-format columns
-coef_h3b$Estimate.x <- ifelse(!is.na(coef_h3b$Estimate.x), paste0(coef_h3b$Estimate.x, " (", coef_h3b$`Std. Error.x`, ")"), NA)
-coef_h3b$Estimate.y <- ifelse(!is.na(coef_h3b$Estimate.y), paste0(coef_h3b$Estimate.y, " (", coef_h3b$`Std. Error.y`, ")"), NA)
-coef_h3b$`Std. Error.x` <- NULL
-coef_h3b$`Std. Error.y` <- NULL
+coef_H2b$Estimate.x <- ifelse(!is.na(coef_H2b$Estimate.x), paste0(coef_H2b$Estimate.x, " (", coef_H2b$`Std. Error.x`, ")"), NA)
+coef_H2b$Estimate.y <- ifelse(!is.na(coef_H2b$Estimate.y), paste0(coef_H2b$Estimate.y, " (", coef_H2b$`Std. Error.y`, ")"), NA)
+coef_H2b$`Std. Error.x` <- NULL
+coef_H2b$`Std. Error.y` <- NULL
 
 
 
 # add to markdown
-kbl(coef_h3b, row.names = F,
-    col.names = gsub(".x|.y", "", names(coef_h3b))) %>%
+kbl(coef_H2b, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_H2b))) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
   add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4))
 
@@ -306,34 +306,34 @@ ggsave(filename = file.path(cd, "Figure4.jpg"),
 # --- create output for export ---#
 
 # create headers
-header <- coef_h3[1, ]
+header <- coef_H2[1, ]
 header[1, 2:ncol(header)] <- ""
-header[, 1] <- "Hypothesis 3"
+header[, 1] <- "Hypothesis 2"
 
-# rbind header with H1
-coef_h3 <- rbind(header, coef_h3)
-
-# create header
-header[, 1] <- "Hypothesis 3A"
-
-# rbind header with H1
-coef_h3a <- rbind(header, coef_h3a)
+# rbind header with H2
+coef_H2 <- rbind(header, coef_H2)
 
 # create header
-header[, 1] <- "Hypothesis 3B"
+header[, 1] <- "Hypothesis 2A"
 
-# rbind header with H1
-coef_h3b <- rbind(header, coef_h3b)
+# rbind header with H2
+coef_H2a <- rbind(header, coef_H2a)
+
+# create header
+header[, 1] <- "Hypothesis 2B"
+
+# rbind header with H2
+coef_H2b <- rbind(header, coef_H2b)
 
 # final rbind
-coefs <- rbind(coef_h3, coef_h3a, coef_h3b)
+coefs <- rbind(coef_H2, coef_H2a, coef_H2b)
 
 names(coefs) <- c("", "beta (SE)", "t", "p", "R2", "beta (SE)", "t", "p", "R2")
 names(coefs) <- gsub(".1", "", names(coefs))
 
 # save file
 write.csv(coefs,
-          file = file.path(cd, "H3.csv"),
+          file = file.path(cd, "H2.csv"),
           row.names = F, na = "")
 ```
 
