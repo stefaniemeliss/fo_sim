@@ -38,6 +38,12 @@ vars <- c("FO",
           "FO social awareness",
           "FO self-efficacy")
 
+vars_out <- c("FO", 
+         "FOutil", 
+         "FOaccount", 
+         "FOaware", 
+         "FOselfeff")
+
 # determine variable names: summed scores
 vars_sum_1 <- c("FO",
             "FO_utility",
@@ -311,55 +317,30 @@ px_w <- 1080
 px_h <- 433
 
 
-sum_1 <- c("FO", 
-           "FO_efficacy", 
-           "FO_utility", 
-           "FO_awareness", 
-           "FO_accountability")
-sum_2 <- c("FO.2", 
-           "FO_efficacy.2", 
-           "FO_utility.2", 
-           "FO_awareness.2", 
-           "FO_accountability.2")
-wtd_1 <- c("FO_wtd", 
-           "FO_efficacy_wtd", 
-           "FO_utility_wtd", 
-           "FO_aware_wtd", 
-           "FO_account_wtd")
-wtd_2 <- c("FO2_wtd", 
-           "FO2_efficacy_wtd", 
-           "FO2_utility_wtd", 
-           "FO2_aware_wtd", 
-           "FO2_account_wtd")
-construct <- c("FO", "FO self-efficacy", "FO utility", "FO social awareness", "FO accountability")
-
-out <- c("FO", "FOselfeff", "FOutil", "FOaware", "FOaccount")
-
-
-for (i in 1:length(construct)) {
+for (i in 1:length(vars)) {
   
   # --- prepare data ---
   
   # select: summed score
   df_sum <- df %>%
-    select(participant, sum_1[i], sum_2[i]) 
+    select(participant, vars_sum_1[i], vars_sum_2[i]) 
   # reshape wide -> long
   dfl_sum <- reshape2::melt(df_sum)
   # format 
-  dfl_sum$variable <- ifelse(dfl_sum$variable == sum_1[i], "1", "2")
+  dfl_sum$variable <- ifelse(dfl_sum$variable == vars_sum_1[i], "1", "2")
   dfl_sum$variable <- factor(dfl_sum$variable, levels = c("1", "2"))
-  dfl_sum$construct <- construct[i]
+  dfl_sum$construct <- vars[i]
   dfl_sum$comp <- "Summed score"
   
   # select: weighted score
   df_wtd <- df %>%
-    select(participant, wtd_1[i], wtd_2[i]) 
+    select(participant, vars_wtd_1[i], vars_wtd_2[i]) 
   # reshape wide -> long
   dfl_wtd <- reshape2::melt(df_wtd)
   # format 
-  dfl_wtd$variable <- ifelse(dfl_wtd$variable == wtd_1[i], "1", "2")
+  dfl_wtd$variable <- ifelse(dfl_wtd$variable == vars_wtd_1[i], "1", "2")
   dfl_wtd$variable <- factor(dfl_wtd$variable, levels = c("1", "2"))
-  dfl_wtd$construct <- construct[i]
+  dfl_wtd$construct <- vars[i]
   dfl_wtd$comp <- "Weighted score"
   
   # combine
@@ -368,7 +349,7 @@ for (i in 1:length(construct)) {
   # --- create plots ---
   
   
-  if (construct[i] == "FO" | construct[i] == "FO self-efficacy") {
+  if (vars[i] == "FO" | vars[i] == "FO self-efficacy") {
     
     if (i == 1) {
       ymin = ymin_main[1]
@@ -391,14 +372,14 @@ for (i in 1:length(construct)) {
       coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = 3)
     
     # add axis labels
-    if (construct[i] == "FO self-efficacy") {
-      main <- main + xlab("Survey") + ylab(construct[i])
+    if (vars[i] == "FO self-efficacy") {
+      main <- main + xlab("Survey") + ylab(vars[i])
     } else {
-      main <- main + xlab("") + ylab(construct[i])
+      main <- main + xlab("") + ylab(vars[i])
     }
     
     # Store object in the global environment.
-    assign(paste0("plt_", out[i]), main)
+    assign(paste0("plt_", vars_out[i]), main)
     
     
     # export for Ambition pub - sum
@@ -448,14 +429,14 @@ for (i in 1:length(construct)) {
     coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
 
   # add axis labels
-  if (construct[i] == "FO self-efficacy") {
-    appendix <- appendix + xlab("Survey") + ylab(construct[i])
+  if (vars[i] == "FO self-efficacy") {
+    appendix <- appendix + xlab("Survey") + ylab(vars[i])
   } else {
-    appendix <- appendix + xlab("") + ylab(construct[i])
+    appendix <- appendix + xlab("") + ylab(vars[i])
   }
   
   # Store object in the global environment.
-  assign(paste0("spagh_", out[i]), appendix)
+  assign(paste0("spagh_", vars_out[i]), appendix)
   
   
   # export for Ambition pub - sum
