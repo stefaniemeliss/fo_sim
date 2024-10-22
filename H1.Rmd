@@ -23,7 +23,7 @@ library(kableExtra)
 
 cd = getwd()
 
-dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/OLD_fosim/Data/Final data files for analysis/FO"
 
 # load data
 df <- read.csv(file.path(dir, "All_data_FO.csv"))
@@ -347,14 +347,39 @@ plt <- ggplot(data = beta, aes(x = `FO subscale`, y = beta)) +
   geom_hline(yintercept = 0, color = black, linetype = "dotted") +
   geom_errorbar(aes(ymin = beta-1.96*se, ymax = beta+1.96*se), width = .1) + 
   geom_point(size = size_dot, color = coral) +
+  coord_cartesian(ylim = c(-.2, .4))+
   facet_grid(DV ~ .) +
-  # facet_grid(. ~ DV) +
   ylab("β") +
   ambition_theme
 plt
 
-ggsave(filename = file.path(cd, "Figure3.jpg"), 
-       units = "cm", width = 20, height = 12)
+ggsave(filename = file.path(cd, "Figure3_H1B.jpg"), 
+       units = "cm", width = 20, height = 12, dpi = 300)
+
+
+plt <- ggplot(data = beta[beta$DV == "Participant skill", ], aes(x = `FO subscale`, y = beta)) +
+  geom_hline(yintercept = 0, color = black, linetype = "dotted") +
+  geom_errorbar(aes(ymin = beta-1.96*se, ymax = beta+1.96*se), width = .1) + 
+  geom_point(size = size_dot, color = coral) +
+  coord_cartesian(ylim = c(-.2, .4))+
+  ylab("β") +
+  ambition_theme_minimal
+plt
+
+ggsave(filename = file.path(cd, "Figure3_H1B_skill.jpg"), 
+       units = "px", width = 2160, height = 764, dpi = 300)
+
+plt <- ggplot(data = beta[beta$DV == "Time off task", ], aes(x = `FO subscale`, y = beta)) +
+  geom_hline(yintercept = 0, color = black, linetype = "dotted") +
+  geom_errorbar(aes(ymin = beta-1.96*se, ymax = beta+1.96*se), width = .1) + 
+  geom_point(size = size_dot, color = coral) +
+  coord_cartesian(ylim = c(-.2, .4))+
+  ylab("β") +
+  ambition_theme_minimal
+plt
+
+ggsave(filename = file.path(cd, "Figure3_H1B_tot.jpg"), 
+       units = "px", width = 2160, height = 764, dpi = 300)
 
 
 ```
