@@ -23,10 +23,13 @@ library(kableExtra)
 
 cd = getwd()
 
-dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/OLD_fosim/Data/Final data files for analysis/FO"
+dir_figs <- file.path(cd, "figures")
+if (!dir.exists(dir_figs)) {
+  dir.create(dir_figs)
+}
 
 # load data
-df <- read.csv(file.path(dir, "All_data_FO.csv"))
+df <- read.csv(file.path(cd, "All_data_FO.csv"))
 # filter
 df <- filter(df, Exclusion_GTR  == 0)
 
@@ -296,7 +299,7 @@ plt <- ggplot(data = beta, aes(x = `FO subscale`, y = beta)) +
   ambition_theme
 plt
 
-ggsave(filename = file.path(cd, "Figure4_H2B.jpg"), 
+ggsave(filename = file.path(dir_figs, "Figure4_H2B.jpg"), 
        units = "cm", width = 20, height = 12, dpi = 300)
 
 
@@ -308,7 +311,7 @@ plt <- ggplot(data = beta[beta$DV == "Autumn term", ], aes(x = `FO subscale`, y 
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(cd, "Figure4_H2B_autumn.jpg"), 
+       filename = file.path(dir_figs, "Figure4_H2B_autumn.jpg"), 
        units = "px", width = 2160, height = 764, dpi = 300)
 
 plt <- ggplot(data = beta[beta$DV == "Spring term", ], aes(x = `FO subscale`, y = beta)) +
@@ -319,7 +322,7 @@ plt <- ggplot(data = beta[beta$DV == "Spring term", ], aes(x = `FO subscale`, y 
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(cd, "Figure4_H2B_spring.jpg"), 
+       filename = file.path(dir_figs, "Figure4_H2B_spring.jpg"), 
        units = "px", width = 2160, height = 764, dpi = 300)
 
 
