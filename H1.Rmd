@@ -23,10 +23,13 @@ library(kableExtra)
 
 cd = getwd()
 
-dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/OLD_fosim/Data/Final data files for analysis/FO"
+dir_figs <- file.path(cd, "figures")
+if (!dir.exists(dir_figs)) {
+  dir.create(dir_figs)
+}
 
 # load data
-df <- read.csv(file.path(dir, "All_data_FO.csv"))
+df <- read.csv(file.path(cd, "All_data_FO.csv"))
 # filter
 df <- filter(df, Exclusion_sim_analysis  == 0)
 
@@ -113,41 +116,6 @@ tmp <- df %>% mutate(bin = ntile(FO, n = 25)) %>%
   summarise(fo = mean(FO),
             acc_change = mean(Diff_sim1A_Sim2A), 
             tot_change = mean(Diff_sim1ToT_sim2ToT)) 
-# create scatter plot with binned data
-binned <- ggplot(tmp, aes(x = acc_change, y = fo)) + 
-  geom_point(col = navy) +
-  ambition_theme + 
-  xlab("Improvement in participant skill between simulator sessions 1 and 2") + ylab("Feedback orientation")
-binned
-
-ggsave(plot = binned,
-       filename = file.path(cd, "FigureB1.jpg"), 
-       units = "cm", width = 20, height = 12)
-
-binned <- binned + ambition_theme_minimal
-
-ggsave(plot = binned, 
-       filename = file.path(cd, "FigureB1_skill.jpg"), 
-       units = "px", width = 2160, height = 764, dpi = 300)
-
-
-# create scatter plot with binned data
-binned <- ggplot(tmp, aes(x = tot_change, y = fo)) + 
-  geom_point(col = navy) +
-  ambition_theme + 
-  xlab("Improvement in pupil time off task between simulator sessions 1 and 2") + ylab("Feedback orientation")
-binned
-
-ggsave(plot = binned,
-       filename = file.path(cd, "FigureB2.jpg"), 
-       units = "cm", width = 20, height = 12)
-
-binned <- binned + ambition_theme_minimal
-
-ggsave(plot = binned, 
-       filename = file.path(cd, "FigureB2_tot.jpg"), 
-       units = "px", width = 2160, height = 764, dpi = 300)
-
 
 # as facet # 
 tmp_l <- reshape2::melt(tmp, id.vars = c("bin", "fo"))
@@ -155,18 +123,57 @@ tmp_l <- reshape2::melt(tmp, id.vars = c("bin", "fo"))
 tmp_l$variable <- ifelse(tmp_l$variable == "acc_change", "Participant skill", "Pupil time off task")
 tmp_l$variable <- factor(tmp_l$variable, levels = c("Participant skill", "Pupil time off task"))
 
-# create scatter plot with binned data
-binned <- ggplot(tmp_l, aes(x = fo, y = value)) + 
+# skill
+binned_skill <- ggplot(tmp_l[tmp_l$variable == "Participant skill", ], aes(x = fo, y = value)) + 
   geom_point(col = navy) +
-  ambition_theme + 
-  facet_grid(variable ~ ., scales = "free") +  
+  facet_grid(variable ~ .) +
   ylab("Improvement between simulator sessions 1 and 2") + 
-  xlab("Feedback orientation")
-binned
+  xlab("Feedback orientation") +
+  coord_cartesian(ylim = c(0, 8), xlim = c(60, 100)) +
+  ambition_theme 
 
+# tot
+binned_tot <- ggplot(tmp_l[tmp_l$variable == "Pupil time off task", ], aes(x = fo, y = value)) + 
+  geom_point(col = navy) +
+  facet_grid(variable ~ .) +
+  ylab("Improvement between simulator sessions 1 and 2") + 
+  xlab("Feedback orientation") +
+  coord_cartesian(ylim = c(0, 60), xlim = c(60, 100)) +
+  ambition_theme 
+
+# do some arranging
+require(ggpubr)
+require(grid)
+binned <- ggarrange(binned_skill + rremove("ylab") + rremove("xlab"), # remove axis labels from plots
+                    binned_tot + rremove("ylab") + rremove("xlab"), # remove axis labels from plots
+                    nrow = 2, align = "v")
+
+binned <- annotate_figure(binned, left = textGrob("Improvement between simulator sessions 1 and 2", 
+                                        rot = 90, vjust = 1, gp = gpar(cex = 1)),
+                bottom = textGrob("Feedback orientation", gp = gpar(cex = 1)))
+binned
 ggsave(plot = binned,
-       filename = file.path(cd, "FigureB12.jpg"), 
+       filename = file.path(dir_figs, "FigureB1.jpg"), 
        units = "cm", width = 20, height = 15)
+
+####
+
+binned_skill <- ggplot(tmp_l[tmp_l$variable == "Participant skill", ], aes(x = fo, y = value)) + 
+  geom_point(col = navy) +
+  coord_cartesian(ylim = c(0, 8), xlim = c(60, 100)) +
+  ambition_theme_minimal
+ggsave(plot = binned_skill, 
+       filename = file.path(dir_figs, "FigureB1_skill.jpg"), 
+       units = "px", width = 2160, height = 764, dpi = 300)
+
+
+binned_tot <- ggplot(tmp_l[tmp_l$variable == "Pupil time off task", ], aes(x = fo, y = value)) + 
+  geom_point(col = navy) +
+  coord_cartesian(ylim = c(0, 60), xlim = c(60, 100)) +
+  ambition_theme 
+ggsave(plot = binned_tot, 
+       filename = file.path(dir_figs, "FigureB1_tot.jpg"), 
+       units = "px", width = 2160, height = 764, dpi = 300)
 
 ```
 
@@ -389,7 +396,7 @@ plt <- ggplot(data = beta, aes(x = `FO subscale`, y = beta)) +
   ambition_theme
 plt
 
-ggsave(filename = file.path(cd, "Figure3_H1B.jpg"), 
+ggsave(filename = file.path(dir_figs, "Figure3_H1B.jpg"), 
        units = "cm", width = 20, height = 12, dpi = 300)
 
 
@@ -401,7 +408,7 @@ plt <- ggplot(data = beta[beta$DV == "Participant skill", ], aes(x = `FO subscal
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(cd, "Figure3_H1B_skill.jpg"), 
+       filename = file.path(dir_figs, "Figure3_H1B_skill.jpg"), 
        units = "px", width = 2160, height = 764, dpi = 300)
 
 plt <- ggplot(data = beta[beta$DV == "Time off task", ], aes(x = `FO subscale`, y = beta)) +
@@ -412,7 +419,7 @@ plt <- ggplot(data = beta[beta$DV == "Time off task", ], aes(x = `FO subscale`, 
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(cd, "Figure3_H1B_tot.jpg"), 
+       filename = file.path(dir_figs, "Figure3_H1B_tot.jpg"), 
        units = "px", width = 2160, height = 764, dpi = 300)
 
 
