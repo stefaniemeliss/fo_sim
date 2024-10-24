@@ -15,11 +15,13 @@ rm(list=ls())
 
 devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
 
-library(tidyr)
 library(dplyr)
 library(kableExtra)
+require(ggpubr)
+require(grid)
 
-# --- read in data ---
+
+# --- define directories ---
 
 cd = getwd()
 
@@ -28,12 +30,31 @@ if (!dir.exists(dir_figs)) {
   dir.create(dir_figs)
 }
 
-# load data
-df <- read.csv(file.path(cd, "All_data_FO.csv"))
+dir_data <- file.path(cd, "data_safetycopy")
+if (!dir.exists(dir_data)) {
+  dir.create(dir_data)
+}
+
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/2023_Q3_Decomp Recomp & FO Sims/Data/Final data files for analysis/FO"
+
+copy_files <- F
+if (copy_files) {
+  files = list.files(path = dir, pattern = ".csv", full.names = T)
+  file.copy(files, dir_data)
+}
+
+reproduce_analysis <- T
+if (reproduce_analysis) {
+  # use files previously stored
+  dir <- dir_data
+}
+
+# --- read in data ---
+
+df <- read.csv(file.path(dir,"All_data_FO.csv"))
+
 # filter
 df <- filter(df, Exclusion_sim_analysis  == 0)
-
-
 ```
 
 ### H1
@@ -99,16 +120,21 @@ coef_tot <- coef
 coef_h1 <- merge(coef_acc, coef_tot, by = "Predictors")
 coef_h1$Predictors <- factor(coef_h1$Predictors, levels = coef_acc$Predictors)
 coef_h1 <- coef_h1[order(coef_h1$Predictors), ]
+idx_bold <- grep("FO", coef_h1$Predictors)
 
 # add to markdown
 kbl(coef_h1, row.names = F,
     col.names = gsub(".x|.y", "", names(coef_h1))) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
-  add_header_above(c(" " = 1, "Participant skill" = 4, "Time off task" = 4))
+  add_header_above(c(" " = 1, "Participant skill" = 4, "Time off task" = 4)) %>%
+  row_spec(idx_bold, bold=T, hline_after = T)
 
 ```
 
 ```{r, echo = F}
+px_w <- 2160
+px_h <- 764
+
 # group data into 25 equal-sized bins
 tmp <- df %>% mutate(bin = ntile(FO, n = 25)) %>%
   # computed the mean of the x-variable and y-variable within each bin
@@ -142,8 +168,6 @@ binned_tot <- ggplot(tmp_l[tmp_l$variable == "Pupil time off task", ], aes(x = f
   ambition_theme 
 
 # do some arranging
-require(ggpubr)
-require(grid)
 binned <- ggarrange(binned_skill + rremove("ylab") + rremove("xlab"), # remove axis labels from plots
                     binned_tot + rremove("ylab") + rremove("xlab"), # remove axis labels from plots
                     nrow = 2, align = "v")
@@ -163,17 +187,17 @@ binned_skill <- ggplot(tmp_l[tmp_l$variable == "Participant skill", ], aes(x = f
   coord_cartesian(ylim = c(0, 8), xlim = c(60, 100)) +
   ambition_theme_minimal
 ggsave(plot = binned_skill, 
-       filename = file.path(dir_figs, "FigureB1_skill.jpg"), 
-       units = "px", width = 2160, height = 764, dpi = 300)
+       filename = file.path(dir_figs, "FigureB1_skill_minimal.jpg"), 
+       units = "px", width = px_w, height = px_h, dpi = 300)
 
 
 binned_tot <- ggplot(tmp_l[tmp_l$variable == "Pupil time off task", ], aes(x = fo, y = value)) + 
   geom_point(col = navy) +
   coord_cartesian(ylim = c(0, 60), xlim = c(60, 100)) +
-  ambition_theme 
+  ambition_theme_minimal 
 ggsave(plot = binned_tot, 
-       filename = file.path(dir_figs, "FigureB1_tot.jpg"), 
-       units = "px", width = 2160, height = 764, dpi = 300)
+       filename = file.path(dir_figs, "FigureB1_tot_minimal.jpg"), 
+       units = "px", width = px_w, height = px_h, dpi = 300)
 
 ```
 
@@ -258,12 +282,14 @@ coef_tot <- coef
 coef_h1a <- merge(coef_acc, coef_tot, by = "Predictors")
 coef_h1a$Predictors <- factor(coef_h1a$Predictors, levels = coef_acc$Predictors)
 coef_h1a <- coef_h1a[order(coef_h1a$Predictors), ]
+idx_bold <- grep("FO", coef_h1a$Predictors)
 
 # add to markdown
 kbl(coef_h1a, row.names = F,
     col.names = gsub(".x|.y", "", names(coef_h1a))) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
-  add_header_above(c(" " = 1, "Participant skill" = 4, "Time off task" = 4))
+  add_header_above(c(" " = 1, "Participant skill" = 4, "Time off task" = 4)) %>%
+  row_spec(idx_bold, bold=T, hline_after = T)
 
 ```
 
@@ -369,12 +395,14 @@ coef_h1b <- coef_h1b %>%
   select(Predictors, everything())
 coef_h1b$Predictors <- ifelse(coef_h1b$Predictors == "scale(get(cov))", "Sim 1 measure", coef_h1b$Predictors)
 
+idx_bold <- grep("FO", coef_h1b$Predictors)
 
 # add to markdown
 kbl(coef_h1b, row.names = F,
     col.names = gsub(".x|.y", "", names(coef_h1b))) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
-  add_header_above(c(" " = 1, "Participant skill" = 4, "Time off task" = 4))
+  add_header_above(c(" " = 1, "Participant skill" = 4, "Time off task" = 4)) %>%
+  row_spec(idx_bold, bold=T, hline_after = T)
 
 
 
@@ -383,7 +411,8 @@ beta <- rbind(beta_acc, beta_tot)
 beta$Predictors <- factor(beta$Predictors, levels = c("FO utility", "FO accountability", "FO social awareness", "FO self-efficacy"))
 names(beta) <- c("FO subscale", "beta", "se", "DV")
 
-
+px_w <- 2160
+px_h <- 764
 size_dot = 2
 
 plt <- ggplot(data = beta, aes(x = `FO subscale`, y = beta)) +
@@ -408,8 +437,8 @@ plt <- ggplot(data = beta[beta$DV == "Participant skill", ], aes(x = `FO subscal
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(dir_figs, "Figure3_H1B_skill.jpg"), 
-       units = "px", width = 2160, height = 764, dpi = 300)
+       filename = file.path(dir_figs, "Figure3_H1B_skill_minimal.jpg"), 
+       units = "px", width = px_w, height = px_h, dpi = 300)
 
 plt <- ggplot(data = beta[beta$DV == "Time off task", ], aes(x = `FO subscale`, y = beta)) +
   geom_hline(yintercept = 0, color = black, linetype = "dotted") +
@@ -419,8 +448,8 @@ plt <- ggplot(data = beta[beta$DV == "Time off task", ], aes(x = `FO subscale`, 
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(dir_figs, "Figure3_H1B_tot.jpg"), 
-       units = "px", width = 2160, height = 764, dpi = 300)
+       filename = file.path(dir_figs, "Figure3_H1B_tot_minimal.jpg"), 
+       units = "px", width = px_w, height = px_h, dpi = 300)
 
 
 ```

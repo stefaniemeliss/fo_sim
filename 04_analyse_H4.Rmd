@@ -10,15 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 rm(list=ls())
 
-# --- load functions from github ---
+# --- load libraries ---
 
 devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
 
-library(tidyr)
 library(dplyr)
 library(kableExtra)
 
-# --- read in data ---
+# --- define directories ---
 
 cd = getwd()
 
@@ -27,9 +26,30 @@ if (!dir.exists(dir_figs)) {
   dir.create(dir_figs)
 }
 
-# load data
-df <- read.csv(file.path(cd, "All_data_FO.csv"))
+dir_data <- file.path(cd, "data_safetycopy")
+if (!dir.exists(dir_data)) {
+  dir.create(dir_data)
+}
 
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/2023_Q3_Decomp Recomp & FO Sims/Data/Final data files for analysis/FO"
+
+copy_files <- F
+if (copy_files) {
+  files = list.files(path = dir, pattern = ".csv", full.names = T)
+  file.copy(files, dir_data)
+}
+
+reproduce_analysis <- T
+if (reproduce_analysis) {
+  # use files previously stored
+  dir <- dir_data
+}
+
+# --- read in data ---
+
+df <- read.csv(file.path(dir,"All_data_FO.csv"))
+
+# filter
 df <- filter(df, Exclusion_H2 == 0)
 
 # script vars 
@@ -41,36 +61,36 @@ vars <- c("FO",
           "FO self-efficacy")
 
 vars_out <- c("FO", 
-         "FOutil", 
-         "FOaccount", 
-         "FOaware", 
-         "FOselfeff")
+              "FOutil", 
+              "FOaccount", 
+              "FOaware", 
+              "FOselfeff")
 
 # determine variable names: summed scores
 vars_sum_1 <- c("FO",
-            "FO_utility",
-            "FO_accountability",
-            "FO_awareness",
-            "FO_efficacy")
+                "FO_utility",
+                "FO_accountability",
+                "FO_awareness",
+                "FO_efficacy")
 
 vars_sum_2 <- c("FO.2",
-            "FO_utility.2",
-            "FO_accountability.2",
-            "FO_awareness.2",
-            "FO_efficacy.2")
+                "FO_utility.2",
+                "FO_accountability.2",
+                "FO_awareness.2",
+                "FO_efficacy.2")
 
 # determine variable names: weighted scores
 vars_wtd_1 <- c("FO_wtd",
-            "FO_utility_wtd",
-            "FO_account_wtd",
-            "FO_aware_wtd",
-            "FO_efficacy_wtd")
+                "FO_utility_wtd",
+                "FO_account_wtd",
+                "FO_aware_wtd",
+                "FO_efficacy_wtd")
 
 vars_wtd_2 <- c("FO2_wtd",
-            "FO2_utility_wtd",
-            "FO2_account_wtd",
-            "FO2_aware_wtd",
-            "FO2_efficacy_wtd")
+                "FO2_utility_wtd",
+                "FO2_account_wtd",
+                "FO2_aware_wtd",
+                "FO2_efficacy_wtd")
 
 ```
 
@@ -315,11 +335,12 @@ ymin_app = c(60, 17)
 ymax_app = c(100, 29)
 ymin_app = c(60, 9) 
 ymax_app = c(100, 35)
-px_w <- 1080
-px_h <- 433
 
 
 for (i in 1:length(vars)) {
+  
+  px_w <- 1080
+  px_h <- 462
   
   # --- prepare data ---
   
@@ -353,6 +374,9 @@ for (i in 1:length(vars)) {
   
   if (vars[i] == "FO" | vars[i] == "FO self-efficacy") {
     
+    px_w <- 1080
+    px_h <- 433
+    
     if (i == 1) {
       ymin = ymin_main[1]
       ymax = ymax_main[1]
@@ -371,7 +395,7 @@ for (i in 1:length(vars)) {
       stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
       ambition_theme + 
       facet_grid(. ~ comp) + 
-      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = 3)
+      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
     
     # add axis labels
     if (vars[i] == "FO self-efficacy") {
@@ -390,9 +414,9 @@ for (i in 1:length(vars)) {
       stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
       stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
       ambition_theme_minimal +
-      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = 3)
+      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
     ggsave(plot = plt,
-           filename = file.path(dir_figs, paste0("Figure5_H4_", vars_out[i], "_sum.jpg")), 
+           filename = file.path(dir_figs, paste0("Figure5_H4_", vars_out[i], "_sum_minimal.jpg")), 
            units = "px", width = px_w, height = px_h, dpi = 300)
     
     # export for Ambition pub - wtd
@@ -401,11 +425,36 @@ for (i in 1:length(vars)) {
       stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
       stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
       ambition_theme_minimal +
-      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = 3)
+      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
     ggsave(plot = plt,
-           filename = file.path(dir_figs, paste0("Figure5_H4_", vars_out[i], "_wtd.jpg")), 
+           filename = file.path(dir_figs, paste0("Figure5_H4_", vars_out[i], "_wtd_minimal.jpg")), 
            units = "px", width = px_w, height = px_h, dpi = 300)
     
+    # create figure for summary for eds
+    sum4eds <- ggplot(data = dfl_wtd, aes(x = variable, y = value, group = 1)) +
+      stat_summary(fun = "mean", geom = "line") +
+      stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
+      stat_summary(fun = "mean", geom = "point",size = size_dot, color = coral) +
+      ambition_theme + 
+      coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
+    
+    # add axis labels
+    if (vars[i] == "FO self-efficacy") {
+      sum4eds <- sum4eds + xlab("Survey") + ylab("Feedback self-efficacy")
+    } else {
+      sum4eds <- sum4eds + xlab("Survey") + ylab("Feedback orientation")
+    }
+    
+    # save orig
+    ggsave(plot = sum4eds,
+           filename = file.path(dir_figs, paste0("Figure_Sum4Eds_", vars_out[i], ".jpg")), 
+           units = "cm", width = 16, height = 6)
+    
+    # export for Ambition pub - wtd
+    sum4eds <- sum4eds + ambition_theme_minimal
+    ggsave(plot = sum4eds,
+           filename = file.path(dir_figs, paste0("Figure_Sum4Eds_", vars_out[i], "_minimal.jpg")), 
+           units = "px", width = px_w, height = px_h, dpi = 300)
   }
   
   if (i == 1) {
@@ -421,15 +470,15 @@ for (i in 1:length(vars)) {
   
   # appendix
   appendix <- ggplot(data = dfl, aes(x = variable, y = value, group = 1)) +
-    geom_point(size = .1, color = black40) +
+    #geom_point(size = size_dot/(4*3), color = black40) +
     geom_line(aes(group = participant), color = black40, linewidth = .25) +
-    stat_summary(fun = "mean", geom = "line") +
-    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-    stat_summary(fun = "mean", geom = "point",size = size_dot/2, color = coral) +
+    stat_summary(fun = "mean", geom = "line", linewidth = .5) +
+    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .05, linewidth = .5) +
+    stat_summary(fun = "mean", geom = "point",size = size_dot/4, color = coral) +
     ambition_theme + 
     facet_grid(. ~ comp) + 
     coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
-
+  
   # add axis labels
   if (vars[i] == "FO self-efficacy") {
     appendix <- appendix + xlab("Survey") + ylab(vars[i])
@@ -441,30 +490,31 @@ for (i in 1:length(vars)) {
   assign(paste0("spagh_", vars_out[i]), appendix)
   
   
+  
   # export for Ambition pub - sum
   plt <- ggplot(data = dfl_sum, aes(x = variable, y = value, group = 1)) +
-    geom_point(size = .1, color = black40) +
+    #geom_point(size = size_dot/(4*3), color = black40) +
     geom_line(aes(group = participant), color = black40, linewidth = .25) +
-    stat_summary(fun = "mean", geom = "line") +
-    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-    stat_summary(fun = "mean", geom = "point",size = size_dot/2, color = coral) +
+    stat_summary(fun = "mean", geom = "line", linewidth = .5) +
+    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .05, linewidth = .5) +
+    stat_summary(fun = "mean", geom = "point",size = size_dot/4, color = coral) +
     ambition_theme_minimal +
     coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
   ggsave(plot = plt,
-         filename = file.path(dir_figs, paste0("FigureB2_H4_", vars_out[i], "_sum.jpg")), 
+         filename = file.path(dir_figs, paste0("FigureB2_H4_", vars_out[i], "_sum_minimal.jpg.jpg")), 
          units = "px", width = px_w, height = px_h, dpi = 300)
   
   # export for Ambition pub - wtd
   plt <- ggplot(data = dfl_wtd, aes(x = variable, y = value, group = 1)) +
-    geom_point(size = .1, color = black40) +
+    #geom_point(size = size_dot/(4*3), color = black40) +
     geom_line(aes(group = participant), color = black40, linewidth = .25) +
-    stat_summary(fun = "mean", geom = "line") +
-    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .1) +
-    stat_summary(fun = "mean", geom = "point",size = size_dot/2, color = coral) +
+    stat_summary(fun = "mean", geom = "line", linewidth = .5) +
+    stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = .05, linewidth = .5) +
+    stat_summary(fun = "mean", geom = "point",size = size_dot/4, color = coral) +
     ambition_theme_minimal +
     coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
   ggsave(plot = plt,
-         filename = file.path(dir_figs, paste0("FigureB2_H4_", vars_out[i], "_wtd.jpg")), 
+         filename = file.path(dir_figs, paste0("FigureB2_H4_", vars_out[i], "_wtd_minimal.jpg.jpg")), 
          units = "px", width = px_w, height = px_h, dpi = 300)
   
 }
@@ -472,31 +522,31 @@ for (i in 1:length(vars)) {
 
 ## --- Combine to create Figure 5 ---
 
-main <- ggpubr::ggarrange(
+fig5 <- ggpubr::ggarrange(
   plt_FO, plt_FOselfeff, nrow = 2, align = "hv")
-ggsave(plot = main,
+ggsave(plot = fig5,
        filename = file.path(dir_figs, "Figure5_H4.jpg"), 
        units = "cm", width = 16, height = 12)
 
 ## --- Combine to create Figure B2 ---
 
-appendix <- ggpubr::ggarrange(
+figb2 <- ggpubr::ggarrange(
   spagh_FO, spagh_FOutil, spagh_FOaccount, spagh_FOaware, spagh_FOselfeff,
   nrow = 5, align = "hv")
-ggsave(plot = appendix,
+ggsave(plot = figb2,
        filename = file.path(dir_figs, "FigureB2_H4.jpg"), 
        units = "cm", width = 21, height = 30)
 
 ```
 
-![image](Figure5_H4.jpg)
-![image](FigureB2_H4.jpg)
+![image](figures/Figure5_H4.jpg)
+![image](figures/FigureB2_H4.jpg)
 
 
 ### Exploratory analysis using time intervall between surveys as covariate
 
 ```{r, echo = F, results='asis'}
-timings <- read.csv("timings_SM.csv")
+timings <- read.csv(file.path(dir,"timings_SM.csv"))
 
 df <- merge(df, timings, by = "participant")
 

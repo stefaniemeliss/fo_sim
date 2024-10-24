@@ -15,11 +15,10 @@ rm(list=ls())
 
 devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main/ambition_theme.R?raw=TRUE")
 
-library(tidyr)
 library(dplyr)
 library(kableExtra)
 
-# --- read in data ---
+# --- define directories ---
 
 cd = getwd()
 
@@ -28,8 +27,29 @@ if (!dir.exists(dir_figs)) {
   dir.create(dir_figs)
 }
 
-# load data
-df <- read.csv(file.path(cd, "All_data_FO.csv"))
+dir_data <- file.path(cd, "data_safetycopy")
+if (!dir.exists(dir_data)) {
+  dir.create(dir_data)
+}
+
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/2023_Q3_Decomp Recomp & FO Sims/Data/Final data files for analysis/FO"
+
+copy_files <- F
+if (copy_files) {
+  files = list.files(path = dir, pattern = ".csv", full.names = T)
+  file.copy(files, dir_data)
+}
+
+reproduce_analysis <- T
+if (reproduce_analysis) {
+  # use files previously stored
+  dir <- dir_data
+}
+
+# --- read in data ---
+
+df <- read.csv(file.path(dir,"All_data_FO.csv"))
+
 # filter
 df <- filter(df, Exclusion_GTR  == 0)
 
@@ -91,15 +111,17 @@ coef$R2[1] <- weights::rd(tmp$r.squared, 2)
 coef_may <- coef
 
 # merge #
-coef_H2 <- merge(coef_dec, coef_may, by = "Predictors", all = T)
-coef_H2$Predictors <- factor(coef_H2$Predictors, levels = coef_may$Predictors)
-coef_H2 <- coef_H2[order(coef_H2$Predictors), ]
+coef_h2 <- merge(coef_dec, coef_may, by = "Predictors", all = T)
+coef_h2$Predictors <- factor(coef_h2$Predictors, levels = coef_may$Predictors)
+coef_h2 <- coef_h2[order(coef_h2$Predictors), ]
+idx_bold <- grep("FO", coef_h2$Predictors)
 
 # add to markdown
-kbl(coef_H2, row.names = F,
-    col.names = gsub(".x|.y", "", names(coef_H2))) %>%
+kbl(coef_h2, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_h2))) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
-  add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4))
+  add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4)) %>%
+  row_spec(idx_bold, bold=T, hline_after = T)
 
 ```
 
@@ -180,15 +202,17 @@ coef$R2[1] <- weights::rd(tmp$r.squared, 2)
 coef_may <- coef
 
 # merge #
-coef_H2a <- merge(coef_dec, coef_may, by = "Predictors", all = T)
-coef_H2a$Predictors <- factor(coef_H2a$Predictors, levels = coef_may$Predictors)
-coef_H2a <- coef_H2a[order(coef_H2a$Predictors), ]
+coef_h2a <- merge(coef_dec, coef_may, by = "Predictors", all = T)
+coef_h2a$Predictors <- factor(coef_h2a$Predictors, levels = coef_may$Predictors)
+coef_h2a <- coef_h2a[order(coef_h2a$Predictors), ]
+idx_bold <- grep("FO", coef_h2a$Predictors) 
 
 # add to markdown
-kbl(coef_H2a, row.names = F,
-    col.names = gsub(".x|.y", "", names(coef_H2a))) %>%
+kbl(coef_h2a, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_h2a))) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
-  add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4))
+  add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4)) %>%
+  row_spec(idx_bold, bold=T, hline_after = T)
 
 ```
 
@@ -248,13 +272,13 @@ for (i in 1:length(FOS)) {
   coef <- merge(coef_dec, coef_may, by = "Predictors", all = T)
 
   if (i == 1) {
-    coef_H2b <- coef
+    coef_h2b <- coef
     
     beta_dec <- coef_dec[grepl("FO", coef_dec$Predictors), c("Predictors", "Estimate", "Std. Error")]
     beta_may <- coef_may[grepl("FO", coef_may$Predictors), c("Predictors", "Estimate", "Std. Error")]
 
   } else {
-    coef_H2b <- rbind(coef_H2b, coef)
+    coef_h2b <- rbind(coef_h2b, coef)
     beta_dec <- rbind(beta_dec, coef_dec[grepl("FO", coef_dec$Predictors), c("Predictors", "Estimate", "Std. Error")]) 
     beta_may <- rbind(beta_may, coef_may[grepl("FO", coef_may$Predictors), c("Predictors", "Estimate", "Std. Error")])
   }
@@ -266,18 +290,19 @@ beta_dec$DV <- "Autumn term"
 beta_may$DV <- "Spring term"
 
 # re-format columns
-coef_H2b$Estimate.x <- ifelse(!is.na(coef_H2b$Estimate.x), paste0(coef_H2b$Estimate.x, " (", coef_H2b$`Std. Error.x`, ")"), NA)
-coef_H2b$Estimate.y <- ifelse(!is.na(coef_H2b$Estimate.y), paste0(coef_H2b$Estimate.y, " (", coef_H2b$`Std. Error.y`, ")"), NA)
-coef_H2b$`Std. Error.x` <- NULL
-coef_H2b$`Std. Error.y` <- NULL
-
+coef_h2b$Estimate.x <- ifelse(!is.na(coef_h2b$Estimate.x), paste0(coef_h2b$Estimate.x, " (", coef_h2b$`Std. Error.x`, ")"), NA)
+coef_h2b$Estimate.y <- ifelse(!is.na(coef_h2b$Estimate.y), paste0(coef_h2b$Estimate.y, " (", coef_h2b$`Std. Error.y`, ")"), NA)
+coef_h2b$`Std. Error.x` <- NULL
+coef_h2b$`Std. Error.y` <- NULL
+idx_bold <- grep("FO", coef_h2b$Predictors)
 
 
 # add to markdown
-kbl(coef_H2b, row.names = F,
-    col.names = gsub(".x|.y", "", names(coef_H2b))) %>%
+kbl(coef_h2b, row.names = F,
+    col.names = gsub(".x|.y", "", names(coef_h2b))) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
-  add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4))
+  add_header_above(c(" " = 1, "Autumn classroom observation ratings" = 4, "Spring classroom observation ratings" = 4)) %>%
+  row_spec(idx_bold, bold=T, hline_after = T)
 
 
 
@@ -288,6 +313,8 @@ names(beta) <- c("FO subscale", "beta", "se", "DV")
 
 
 size_dot = 2
+px_w <- 2160
+px_h <- 764
 
 plt <- ggplot(data = beta, aes(x = `FO subscale`, y = beta)) +
   geom_hline(yintercept = 0, color = black, linetype = "dotted") +
@@ -311,8 +338,8 @@ plt <- ggplot(data = beta[beta$DV == "Autumn term", ], aes(x = `FO subscale`, y 
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(dir_figs, "Figure4_H2B_autumn.jpg"), 
-       units = "px", width = 2160, height = 764, dpi = 300)
+       filename = file.path(dir_figs, "Figure4_H2B_autumn_minimal.jpg"), 
+       units = "px", width = px_w, height = px_h, dpi = 300)
 
 plt <- ggplot(data = beta[beta$DV == "Spring term", ], aes(x = `FO subscale`, y = beta)) +
   geom_hline(yintercept = 0, color = black, linetype = "dotted") +
@@ -322,8 +349,8 @@ plt <- ggplot(data = beta[beta$DV == "Spring term", ], aes(x = `FO subscale`, y 
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(dir_figs, "Figure4_H2B_spring.jpg"), 
-       units = "px", width = 2160, height = 764, dpi = 300)
+       filename = file.path(dir_figs, "Figure4_H2B_spring_minimal.jpg"), 
+       units = "px", width = px_w, height = px_h, dpi = 300)
 
 
 
@@ -333,27 +360,27 @@ ggsave(plot = plt,
 # --- create output for export ---#
 
 # create headers
-header <- coef_H2[1, ]
+header <- coef_h2[1, ]
 header[1, 2:ncol(header)] <- ""
 header[, 1] <- "Hypothesis 2"
 
 # rbind header with H2
-coef_H2 <- rbind(header, coef_H2)
+coef_h2 <- rbind(header, coef_h2)
 
 # create header
 header[, 1] <- "Hypothesis 2A"
 
 # rbind header with H2
-coef_H2a <- rbind(header, coef_H2a)
+coef_h2a <- rbind(header, coef_h2a)
 
 # create header
 header[, 1] <- "Hypothesis 2B"
 
 # rbind header with H2
-coef_H2b <- rbind(header, coef_H2b)
+coef_h2b <- rbind(header, coef_h2b)
 
 # final rbind
-coefs <- rbind(coef_H2, coef_H2a, coef_H2b)
+coefs <- rbind(coef_h2, coef_h2a, coef_h2b)
 
 names(coefs) <- c("", "beta (SE)", "t", "p", "R2", "beta (SE)", "t", "p", "R2")
 names(coefs) <- gsub(".1", "", names(coefs))

@@ -17,14 +17,40 @@ devtools::source_url("https://github.com/stefaniemeliss/ambition_theme/blob/main
 library(tidyr)
 library(dplyr)
 
+# --- define directories ---
+
+cd = getwd()
+
+dir_data <- file.path(cd, "data_safetycopy")
+if (!dir.exists(dir_data)) {
+  dir.create(dir_data)
+}
+
+dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/2023_Q3_Decomp Recomp & FO Sims/Data/Final data files for analysis/FO"
+
+copy_files <- F
+if (copy_files) {
+  files = list.files(path = dir, pattern = ".csv", full.names = T)
+  file.copy(files, dir_data)
+}
+
+reproduce_analysis <- T
+if (reproduce_analysis) {
+  # use files previously stored
+  dir <- dir_data
+}
+
 # --- read in data ---
 
-dir = "C:/Users/stefanie.meliss/OneDrive - Ambition Institute/research_projects/Ark Feedback Orientation and Sims/Data/Final data files for analysis/FO"
-
-setwd(dir)
-
 df <- read.csv(file.path(dir,"All_data_FO.csv"))
-item <- read.csv("Factor_analysis_data_FO.csv")
+item <- read.csv(file.path(dir,"Factor_analysis_data_FO.csv"))
+
+
+# only use complete data
+complete_obs <- df$participant[df$Exclusion_H2 == 0]
+
+# subset item-level data
+item <- subset(item, participant %in% complete_obs)
 
 ```
 
@@ -69,10 +95,7 @@ psych::alpha(tmp, title = "Feedback orientation self-efficacy - Survey 2")
 
 # get data on test-retest reliability #
 
-# only use complete data
-complete_obs <- fo2$participant[!is.na(fo2$fos2_1)]
 fo <- item[, c(grep("participant|fos", names(item)))]
-fo <- subset(fo, participant %in% complete_obs)
 
 # convert wide into long (one row per item)
 long_df <- fo %>%
@@ -106,9 +129,9 @@ psych::testRetest(t1 = long_df,
                   lmer = F)
 
 tmp <- psych::testRetest(t1 = long_df,
-                  time = "survey",
-                  id = "participant",
-                  lmer = F)
+                         time = "survey",
+                         id = "participant",
+                         lmer = F)
 
 
 cat("FO utility")
@@ -324,11 +347,6 @@ psych::testRetest(t1 = long_df,
 ```
 
 
-
-
-
-### Psychometric properties of the FO scales
-
 ### Psychometric properties of the conscientiousness scale
 
 ```{r, echo = F}
@@ -341,7 +359,7 @@ item <- subset(item, pseudonym_1 %in% complete_obs)
 
 # get cronbach's alpha for survey 1 #
 psych::alpha(item[-1], keys =  c("bfi_conscientiousness_1", "bfi_conscientiousness_2", "bfi_conscientiousness_5", 
-             "bfi_conscientiousness_6", "bfi_conscientiousness_10", "bfi_conscientiousness_12"))
+                                 "bfi_conscientiousness_6", "bfi_conscientiousness_10", "bfi_conscientiousness_12"))
 
 
 ```
@@ -350,15 +368,20 @@ psych::alpha(item[-1], keys =  c("bfi_conscientiousness_1", "bfi_conscientiousne
 ### Psychometric properties of the feedback scales
 
 ```{r, echo = F}
-
 # read in item-level data
-item <- read.csv(file = file.path(dir, "FBenv_sat_item-level.csv"))
+item <- read.csv(file = file.path(dir, "Factor_analysis_data_FO.csv"))
 item <- subset(item, participant %in% complete_obs)
 
 # --- psychometric analysis --- #
 
 sat <- item[, grepl("participant|satis", names(item))]
 psych::alpha(sat[-1], title = "Feedback satisfaction")
+
+# read in item-level data
+item <- read.csv(file = file.path(dir, "FBenv_item-level.csv"))
+item <- subset(item, participant %in% complete_obs)
+
+# --- psychometric analysis --- #
 
 seek <- item[, grepl("participant|feedback_seek", names(item))]
 psych::alpha(seek[-1], title = "Feedback seeking (supervisor and coworkers")
