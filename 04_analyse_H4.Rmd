@@ -501,7 +501,7 @@ for (i in 1:length(vars)) {
     ambition_theme_minimal +
     coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
   ggsave(plot = plt,
-         filename = file.path(dir_figs, paste0("FigureB2_H4_", vars_out[i], "_sum_minimal.jpg.jpg")), 
+         filename = file.path(dir_figs, paste0("FigureB2_H4_", vars_out[i], "_sum_minimal.jpg")), 
          units = "px", width = px_w, height = px_h, dpi = 300)
   
   # export for Ambition pub - wtd
@@ -514,7 +514,7 @@ for (i in 1:length(vars)) {
     ambition_theme_minimal +
     coord_cartesian(ylim = c(ymin, ymax))  + scale_y_continuous(n.breaks = breaks)
   ggsave(plot = plt,
-         filename = file.path(dir_figs, paste0("FigureB2_H4_", vars_out[i], "_wtd_minimal.jpg.jpg")), 
+         filename = file.path(dir_figs, paste0("FigureB2_H4_", vars_out[i], "_wtd_minimal.jpg")), 
          units = "px", width = px_w, height = px_h, dpi = 300)
   
 }
