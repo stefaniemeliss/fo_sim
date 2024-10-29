@@ -339,9 +339,6 @@ ymax_app = c(100, 35)
 
 for (i in 1:length(vars)) {
   
-  px_w <- 1080
-  px_h <- 462
-  
   # --- prepare data ---
   
   # select: summed score
@@ -489,6 +486,8 @@ for (i in 1:length(vars)) {
   # Store object in the global environment.
   assign(paste0("spagh_", vars_out[i]), appendix)
   
+  px_w <- 1080
+  px_h <- 462
   
   
   # export for Ambition pub - sum
