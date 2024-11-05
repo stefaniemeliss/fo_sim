@@ -177,7 +177,7 @@ binned <- annotate_figure(binned, left = textGrob("Improvement between simulator
                 bottom = textGrob("Feedback orientation", gp = gpar(cex = 1)))
 binned
 ggsave(plot = binned,
-       filename = file.path(dir_figs, "FigureB1.jpg"), 
+       filename = file.path(dir_figs, "FigureB1.svg"), 
        units = "cm", width = 20, height = 15)
 
 ####
@@ -187,8 +187,8 @@ binned_skill <- ggplot(tmp_l[tmp_l$variable == "Participant skill", ], aes(x = f
   coord_cartesian(ylim = c(0, 8), xlim = c(60, 100)) +
   ambition_theme_minimal
 ggsave(plot = binned_skill, 
-       filename = file.path(dir_figs, "FigureB1_skill_minimal.jpg"), 
-       units = "px", width = px_w, height = px_h, dpi = 300)
+       filename = file.path(dir_figs, "FigureB1_skill_minimal.svg"), 
+       units = "px", width = px_w, height = px_h, dpi = 600)
 
 
 binned_tot <- ggplot(tmp_l[tmp_l$variable == "Pupil time off task", ], aes(x = fo, y = value)) + 
@@ -196,8 +196,8 @@ binned_tot <- ggplot(tmp_l[tmp_l$variable == "Pupil time off task", ], aes(x = f
   coord_cartesian(ylim = c(0, 60), xlim = c(60, 100)) +
   ambition_theme_minimal 
 ggsave(plot = binned_tot, 
-       filename = file.path(dir_figs, "FigureB1_tot_minimal.jpg"), 
-       units = "px", width = px_w, height = px_h, dpi = 300)
+       filename = file.path(dir_figs, "FigureB1_tot_minimal.svg"), 
+       units = "px", width = px_w, height = px_h, dpi = 600)
 
 ```
 
@@ -425,8 +425,8 @@ plt <- ggplot(data = beta, aes(x = `FO subscale`, y = beta)) +
   ambition_theme
 plt
 
-ggsave(filename = file.path(dir_figs, "Figure3_H1B.jpg"), 
-       units = "cm", width = 20, height = 12, dpi = 300)
+ggsave(filename = file.path(dir_figs, "Figure3_H1B.svg"), 
+       units = "cm", width = 20, height = 12, dpi = 600)
 
 
 plt <- ggplot(data = beta[beta$DV == "Participant skill", ], aes(x = `FO subscale`, y = beta)) +
@@ -437,8 +437,8 @@ plt <- ggplot(data = beta[beta$DV == "Participant skill", ], aes(x = `FO subscal
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(dir_figs, "Figure3_H1B_skill_minimal.jpg"), 
-       units = "px", width = px_w, height = px_h, dpi = 300)
+       filename = file.path(dir_figs, "Figure3_H1B_skill_minimal.svg"), 
+       units = "px", width = px_w, height = px_h, dpi = 600)
 
 plt <- ggplot(data = beta[beta$DV == "Time off task", ], aes(x = `FO subscale`, y = beta)) +
   geom_hline(yintercept = 0, color = black, linetype = "dotted") +
@@ -448,8 +448,8 @@ plt <- ggplot(data = beta[beta$DV == "Time off task", ], aes(x = `FO subscale`, 
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(dir_figs, "Figure3_H1B_tot_minimal.jpg"), 
-       units = "px", width = px_w, height = px_h, dpi = 300)
+       filename = file.path(dir_figs, "Figure3_H1B_tot_minimal.svg"), 
+       units = "px", width = px_w, height = px_h, dpi = 600)
 
 
 ```

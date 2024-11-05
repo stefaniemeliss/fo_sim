@@ -326,8 +326,8 @@ plt <- ggplot(data = beta, aes(x = `FO subscale`, y = beta)) +
   ambition_theme
 plt
 
-ggsave(filename = file.path(dir_figs, "Figure4_H2B.jpg"), 
-       units = "cm", width = 20, height = 12, dpi = 300)
+ggsave(filename = file.path(dir_figs, "Figure4_H2B.svg"), 
+       units = "cm", width = 20, height = 12, dpi = 600)
 
 
 plt <- ggplot(data = beta[beta$DV == "Autumn term", ], aes(x = `FO subscale`, y = beta)) +
@@ -338,8 +338,8 @@ plt <- ggplot(data = beta[beta$DV == "Autumn term", ], aes(x = `FO subscale`, y 
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(dir_figs, "Figure4_H2B_autumn_minimal.jpg"), 
-       units = "px", width = px_w, height = px_h, dpi = 300)
+       filename = file.path(dir_figs, "Figure4_H2B_autumn_minimal.svg"), 
+       units = "px", width = px_w, height = px_h, dpi = 600)
 
 plt <- ggplot(data = beta[beta$DV == "Spring term", ], aes(x = `FO subscale`, y = beta)) +
   geom_hline(yintercept = 0, color = black, linetype = "dotted") +
@@ -349,8 +349,8 @@ plt <- ggplot(data = beta[beta$DV == "Spring term", ], aes(x = `FO subscale`, y 
   ylab("β") +
   ambition_theme_minimal
 ggsave(plot = plt, 
-       filename = file.path(dir_figs, "Figure4_H2B_spring_minimal.jpg"), 
-       units = "px", width = px_w, height = px_h, dpi = 300)
+       filename = file.path(dir_figs, "Figure4_H2B_spring_minimal.svg"), 
+       units = "px", width = px_w, height = px_h, dpi = 600)
 
 
 
