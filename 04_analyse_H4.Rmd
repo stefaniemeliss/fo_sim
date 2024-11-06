@@ -329,8 +329,8 @@ write.csv(out, file = file.path(cd, "H4_twosided.csv"), row.names = F)
 # --- set some overall parameter --- #
 
 size_dot = 2
-ymin_main = c(75, 15)
-ymax_main = c(85, 25)
+ymin_main = c(60, 15)
+ymax_main = c(100, 25)
 ymin_app = c(60, 17)
 ymax_app = c(100, 29)
 ymin_app = c(60, 9) 
